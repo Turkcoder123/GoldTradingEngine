@@ -1,0 +1,28 @@
+# Environment and secrets (GIT-6)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Operating system and editor state (GIT-6)
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Logs and temporary output (FLOW-9)
+*.log
+*.tmp
+tmp/
+.cache/
+
+# Dependency and build output directories are added here together with the
+# chosen stack (see OPEN-2 in rules.md).
+# node_modules/
+# dist/
+# build/
+# .venv/
