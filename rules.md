@@ -118,7 +118,7 @@ Resolved items keep their ID for reference (`META-3`).
 | ID | Question | Impact |
 | ------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | OPEN-1 | **Resolved by the user:** the project starts at version `1.0.1`. | `VER-1`, `VER-3` |
-| OPEN-2 | Which technology stack and package manager will be used? | `MOD-8`, `CODE-6` |
+| OPEN-2 | **Resolved by the user:** Python 3 with the standard library only; no package manager and no third-party dependency. | `MOD-8`, `CODE-6` |
 | OPEN-3 | Is Turkish user-facing text required? If yes, the `tr` locale file becomes the only place where Turkish is permitted. | `LANG-4` |
 | OPEN-4 | Should releases be automated by a `scripts/release` step that bumps `VERSION`, updates `CHANGELOG.md`, and tags the commit? | `VER-3`, `VER-5`, `VER-6` |
 | OPEN-5 | Which license applies to the project? | `GIT-8` |
