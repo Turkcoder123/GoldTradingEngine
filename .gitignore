@@ -20,9 +20,17 @@ Thumbs.db
 tmp/
 .cache/
 
-# Dependency and build output directories are added here together with the
-# chosen stack (see OPEN-2 in rules.md).
-# node_modules/
-# dist/
-# build/
-# .venv/
+# Python bytecode and tool caches (FLOW-9)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated market data and runtime state (GIT-6, FLOW-9)
+xauusd_data/
+*.lock
+
+# Local Python environment (the project itself needs no dependency)
+.venv/
+venv/
+*.egg-info/
+
