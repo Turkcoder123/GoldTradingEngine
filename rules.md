@@ -100,6 +100,7 @@ Single source of truth for how this project is written, versioned, and maintaine
 | FLOW-7 | Close every task with a Turkish summary: what changed, which files, which rules were exercised, and the proposed next version. |
 | FLOW-8 | Never delete user work, rewrite files outside the scope of the task, or perform destructive git operations without approval. |
 | FLOW-9 | Keep generated artifacts, temporary scripts, and scratch files out of the repository. |
+| FLOW-10 | Adding a data type is one change that also updates its inventory: the registry in `src/shared/config.py`, `docs/data.md` plus the matching guide (`docs/cot.md`, `docs/macro.md`, `docs/web.md`), `README.md`, and a fresh `python data_report.py` run. The dashboard and the report must show the new type without further code changes, and the tests that compare the guides with the registry must pass. |
 
 ## 7. Rule Changes
 
@@ -135,5 +136,6 @@ Use this list before reporting any task as finished.
 - [ ] `VERSION` file and `CHANGELOG.md` are consistent with the changes (`VER-3`, `VER-6`).
 - [ ] The proposed version bump was confirmed by the user (`VER-2`).
 - [ ] Linter, type checks, and tests passed, or the gap is reported (`FLOW-4`).
+- [ ] A new data type is registered, documented, and present in a fresh `python data_report.py` run (`FLOW-10`).
 - [ ] The change is a single logical unit with a Conventional Commit message (`GIT-2`, `GIT-4`).
 

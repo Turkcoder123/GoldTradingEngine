@@ -4,9 +4,10 @@ Project workspace repository, versioned with git and governed by a written rule 
 
 ## Status
 
-Initialized, with one application that has three parts, all Python 3 and
+Initialized, with one application that has four parts, all Python 3 and
 standard library only: a 1-minute price keeper for the gold complex and the
-dollar index, a weekly CFTC COT export, and a FRED macro export. The project
+dollar index, a weekly CFTC COT export, a FRED macro export, and a local web
+dashboard that shows the stored data. The project
 version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 
 ## Repository layout
@@ -20,11 +21,17 @@ version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 | `update_1m.py` | Entry point of the 1-minute keeper (`--help` lists every option). |
 | `update_cot.py` | Entry point of the CFTC COT export (weekly gold positioning). |
 | `update_fred.py` | Entry point of the FRED macro export. |
+| `update_alt.py` | Entry point of the alternative sources (ETF gold, GVZ, Fed documents). |
+| `update_rates.py` | Entry point of the derived real interest rates (per country). |
+| `serve_dashboard.py` | Entry point of the local web dashboard (read-only). |
+| `data_report.py` | Entry point of the text data inventory (`data_report.txt`). |
 | `src/shared/` | Constants, series registry, UTC time helpers, `VERSION` reader. |
-| `src/core/` | Domain layer: prices, COT and FRED (feed, storage, refresh, status). |
+| `src/core/` | Domain layer: prices, COT, FRED, ETF gold, GVZ, Fed documents, SMC structures. |
 | `src/features/cli/` | Command line surfaces: parsers, report writers, wiring. |
+| `src/features/web/` | Dashboard: payload builders, HTTP server, labels, static assets. |
+| `src/features/report/` | Plain text inventory of everything stored (`data_report.txt`). |
 | `tests/` | Test suite mirroring `src/` (`MOD-9`); run with `python -m pytest`. |
-| `docs/` | `data.md`, `cot.md`, `macro.md`: formats, column guides, pitfalls. |
+| `docs/` | `data.md`, `cot.md`, `macro.md`, `alternative.md`, `web.md`. |
 
 Dependency direction is one way (`MOD-6`): `features` uses `core`, `core` uses
 `shared`, and `shared` imports nothing from the other two layers.
@@ -145,6 +152,104 @@ python update_fred.py --status           # latest value + short and 1y change
 
 No API key is required and none is stored. See `docs/macro.md`.
 
+## Dashboard (local web page)
+
+`serve_dashboard.py` serves the stored data as one local page: totals and a card
+per price series, daily candlesticks with a volume strip, the weekly COT net
+position, one sparkline card per macro series, and an alternative sources panel
+(ETF tonnage, GVZ and the newest Fed documents). Read-only, standard library
+only, no external chart library and no build step:
+
+```sh
+python serve_dashboard.py                 # http://127.0.0.1:8765/
+python serve_dashboard.py --port 9000 --ttl 30
+```
+
+A PID file in the data directory (`dashboard-<port>.pid`) refuses a second start
+on the same address with the pid and the URL of the running instance;
+`--pid-file` moves it and `--no-pid` skips the check. Ctrl-C and `kill` clear it,
+and a killed run never blocks the next start.
+
+The JSON behind the page is available on the same server
+(`/api/overview`, `/api/series/xauusd?months=3`, `/api/smc/xauusd?months=3`,
+`/api/cot`, `/api/macro`), so a script can read the aggregates without parsing
+minute bars. See `docs/web.md`.
+
+## Smart money structures
+
+`src/core/smc.py` detects the basic smart money concept structures on the stored
+bars: confirmed swing highs and lows, BOS and CHoCH, liquidity sweeps, order
+blocks and fair value gaps. The page draws them over the daily candle chart as
+translucent zones, dashed levels and markers, and a panel below adds the counts,
+the parameters and the newest structures with four group toggles.
+
+```sh
+python serve_dashboard.py                        # the panel is part of the page
+curl -s 'http://127.0.0.1:8765/api/smc/xauusd?months=3'   # the same data as JSON
+```
+
+Every structure carries `pattern_at` (the bar that formed it) and `detected_at`
+(the first bar whose close made it knowable), so nothing is read before it was
+known, and every zone reports where it was touched and filled. The rules are
+ported from the SMC pattern discovery system v0.1 to the standard library, so no
+dependency is added. See `docs/smc.md`.
+
+## Data report (text inventory)
+
+`data_report.py` writes one plain text file with what is stored right now: per
+price series the resolution, the covered range, the row and file counts, the
+size, the last close and the two changes, plus both stored COT reports and every
+macro series with its unit, frequency, coverage and last value.
+
+```sh
+python data_report.py                    # <data dir>/data_report.txt
+python data_report.py --output -         # print it instead
+python data_report.py --output report.txt --quiet
+```
+
+Adding a data type is one change that also updates its inventory (`FLOW-10`):
+the registry, the guides and this report move together, and the dashboard picks
+the new type up without code changes. See `docs/data.md`.
+
+## Alternative sources (ETF gold, GVZ, Fed documents)
+
+`update_alt.py` adds three context sources, all fetched with the standard library
+only: the physical gold held by the GLD and IAU ETFs, the Cboe gold volatility
+index and the Federal Reserve speeches and FOMC documents.
+
+```sh
+python update_alt.py                    # all three sources
+python update_alt.py --source etf --etf gld
+python update_alt.py --status --json
+```
+
+* GLD: the official SPDR archive (XLSX) with close, volume, ounces, tonnes and
+  NAV since 2004-11-18; IAU: the tonnage snapshot of the iShares product page.
+* GVZ: the Cboe history CSV, 2009-09-18 onwards.
+* Fed: both Board RSS feeds, with the text of every new document stored next to
+  the index (`alt/fed_text/`), ready for a keyword or sentiment pass.
+
+Sources, columns, the endpoints that were tested and rejected (CME warehouse
+stocks, IMF IFS, WGC downloads, Yahoo) and the licensing notes are in
+`docs/alternative.md`.
+
+## Real interest rates
+
+`update_rates.py` derives an ex-post real rate per country,
+`long term government yield - consumer price inflation`, from the FRED series the
+project already downloads, and stores one `real_<cc>.csv` per country:
+
+```sh
+python update_rates.py                 # five countries, monthly
+python update_rates.py --country US,DE --status --json
+python update_rates.py --offline       # rebuild from the stored series only
+```
+
+The page shows the per-country rates and the equal weighted median next to the
+macro panel, and `python data_report.py` prints the same table. A series older
+than six months is marked `STALE` instead of pretending to be current. The
+formula, the series ids and the limits are in `docs/rates.md`.
+
 ## Documentation
 
 | Document | Content |
@@ -152,6 +257,10 @@ No API key is required and none is stored. See `docs/macro.md`.
 | `docs/data.md` | All datasets: paths, schemas, coverage, quality guarantees, how to join them |
 | `docs/cot.md` | What the COT report means, column dictionary, how to read it, pitfalls |
 | `docs/macro.md` | FRED series registry, units, frequencies and how each one relates to gold |
+| `docs/alternative.md` | ETF gold holdings, GVZ and Fed documents: sources, columns, rejected endpoints |
+| `docs/rates.md` | Real interest rates: formula, country registry, limits |
+| `docs/smc.md` | Smart money structures: rules, look-ahead, zones, overlay, API, limits |
+| `docs/web.md` | Dashboard: what it shows, its API, how the aggregates are built |
 | `rules.md` | Project rule set: language, versioning, git, modularity, workflow |
 
 ## Development

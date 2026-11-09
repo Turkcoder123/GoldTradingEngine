@@ -13,6 +13,11 @@ committed to git (`.gitignore` covers `xauusd_data/`).
 | DXY 1-minute bars | `xauusd_data/dxy_1m_YYYY-MM.csv` | 2025-11-10 -> 2026-11-06, 314,886 bars | 17 MB | `python update_1m.py --series dxy` |
 | CFTC COT, gold | `xauusd_data/cot/cot_*_gold_YYYY.csv` | 44 weekly reports of the current year | ~8 KB | `python update_cot.py` |
 | FRED macro series | `xauusd_data/fred/<SERIES>.csv` | full history per series (1962 -> today) | ~1.3 MB | `python update_fred.py` |
+| Gold ETF holdings | `xauusd_data/alt/etf_<fund>_daily.csv` | GLD 2004 -> today, IAU snapshots | ~360 KB | `python update_alt.py --source etf` |
+| Gold volatility index | `xauusd_data/alt/gvz_daily.csv` | 2009-09-18 -> today | ~120 KB | `python update_alt.py --source gvz` |
+| Federal Reserve documents | `xauusd_data/alt/fed_documents.csv` + `alt/fed_text/` | newest 10 per run | grows with use | `python update_alt.py --source fed` |
+| Real interest rates | `xauusd_data/rates/real_<cc>.csv` | 5 countries, monthly | ~15 KB | `python update_rates.py` |
+| Text inventory | `xauusd_data/data_report.txt` | snapshot of everything above | ~10 KB | `python data_report.py` |
 
 Default data directory: `$XAUUSD_DATA_DIR` or `<project>/xauusd_data`. Override
 per run with `--data-dir`.
@@ -94,6 +99,58 @@ GOLD - COMMODITY EXCHANGE INC.,2026-11-03,399169,220530,40982,68289,152,62,17954
   later: shift it to its release date before comparing it with prices.
 * The 1-minute series starts at 23:00 UTC on a Sunday; a weekly aggregate that
   assumes calendar days will therefore show a shorter first bucket.
+
+## Alternative sources
+
+Three context sources live under `<data dir>/alt/` and are updated by one entry
+point:
+
+```sh
+python update_alt.py                  # ETF gold holdings, GVZ, Fed documents
+python update_alt.py --status         # what is stored, no network
+```
+
+* `etf_<fund>_daily.csv` - `date,close,volume,tonnes,ounces,nav`; GLD holds the
+  full SPDR archive, IAU only the tonnage snapshots of each run.
+* `gvz_daily.csv` - `date,close` of the Cboe gold volatility index.
+* `fed_documents.csv` - `date,kind,title,speaker,url,chars` plus one
+  `fed_text/<page>.txt` per document.
+
+Sources, columns, rejected endpoints and the licensing notes are documented in
+`docs/alternative.md`.
+
+## Real interest rates
+
+`update_rates.py` derives an ex-post real rate per country
+(`long term yield - CPI inflation`, joined on the month) from the stored FRED
+series and writes `rates/real_<cc>.csv` (`date,real`). The country registry and
+the formula are documented in `docs/rates.md`.
+
+## Text inventory
+
+`data_report.py` writes one plain ASCII file with what is stored right now: per
+price series the resolution, the covered range, the row and file counts, the
+size, the last close and the two changes, plus both stored COT reports and every
+macro series with its unit, frequency, coverage and last value.
+
+```sh
+python data_report.py                  # <data dir>/data_report.txt
+python data_report.py --output -       # print it instead of writing
+python data_report.py --year 2025      # another COT year
+```
+
+The file is a snapshot and is regenerated, never edited. It lives in the data
+directory, so it is not committed (`.gitignore` covers `xauusd_data/`).
+
+## Keeping this list current
+
+Adding a data type (a price series, a COT report, a macro series, a new dataset)
+is a single change (`FLOW-10`): the registry in `src/shared/config.py`, the
+tables here and in the matching guide, `README.md`, and a fresh
+`python data_report.py` run. The dashboard and the report read the registry, so
+they show a new type without code changes, and the tests in
+`tests/shared/test_config.py` fail when this document, `docs/macro.md` and the
+registry drift apart.
 
 ## Backups and scratch files
 

@@ -9,6 +9,122 @@ version is tagged in git as `vX.Y.Z`.
 
 ## [Unreleased]
 
+### Added
+
+- Smart money structures over the price chart: `src/core/smc*.py` detects
+  confirmed swing highs and lows, BOS and CHoCH, liquidity sweeps, order blocks
+  and fair value gaps on the stored bars, ported from the SMC pattern discovery
+  system v0.1 (`smc_pattern_system_v0_1.zip`) to the standard library, so the
+  pandas dependency of the reference is not needed. Every structure reports
+  `pattern_at` and `detected_at`, so a pivot is never read before the bars to its
+  right had closed, and every zone reports where it was touched and filled.
+- `GET /api/smc/<key>?months=N`: the structures of one price window, each with
+  the index of its bar, plus the pattern counts and the parameters used.
+- The dashboard draws them over the daily candles (translucent zones, dashed
+  levels, sweep and swing markers) and adds a panel with the window summary, four
+  group toggles and the newest structures.
+- `docs/smc.md`: the rules, the look-ahead guarantee, the zone lifetime, the
+  overlay, the API and the limits of the detection.
+
+### Changed
+
+- `src/features/web/static/app.js` keeps only the data flow: the element handles
+  and the shell labels moved to `static/layout.js`, so both files stay under the
+  `MOD-2` soft limit.
+
+## [1.4.0] - 2026-11-08
+
+### Added
+
+- `update_rates.py` plus `src/core/rates.py`: real interest rates derived from
+  the stored FRED series (`long term government yield - CPI inflation`, joined
+  on the month) for five countries (US, DE, FR, IT, GB), stored as
+  `rates/real_<cc>.csv` with an equal weighted world median, and shown in the
+  macro panel and the text report. Inflation is computed from the CPI index
+  series because the OECD growth series are no longer updated, and a series
+  older than six months is marked `STALE` instead of pretending to be current.
+  Japan and Turkey are not registered: FRED has no current Japan CPI and no
+  long term rate for Turkey.
+- `docs/rates.md`: the formula, the country registry, the output shape and the
+  limits of the derived measure.
+
+## [1.3.0] - 2026-11-08
+
+### Added
+
+- `data_report.py` writes a plain text inventory of everything stored: per price
+  series the resolution, covered range, row and file counts, size, last close and
+  the two changes, both stored COT reports, and every macro series with its unit,
+  frequency, coverage and last value. `--output -` prints it instead of writing
+  `<data dir>/data_report.txt`.
+- A rule (`FLOW-10`) that a new data type is one change: registry, documentation
+  and a fresh report run move together, and the tests that compare the guides
+  with the registry fail when they drift apart.
+- `update_alt.py` plus `src/core/{etf,gvz,fedtext}*.py`: three alternative data
+  types stored under `<data dir>/alt/`, fetched with the standard library only.
+- Gold ETF holdings: the official SPDR archive (XLSX, close, volume, ounces,
+  tonnes and NAV since 2004-11-18) for GLD and the iShares tonnage snapshot for
+  IAU, merged by date into `etf_<fund>_daily.csv`.
+- The Cboe gold volatility index (GVZ) from the official Cboe CSV, stored as
+  `gvz_daily.csv` from 2009-09-18 onwards.
+- Federal Reserve speeches, FOMC statements and minutes from the two Board RSS
+  feeds, with the body text of every new document stored in `alt/fed_text/` and
+  indexed in `fed_documents.csv` (`--limit` caps a run).
+- `--status`, `--json`, `--quiet` and `--source`/`--etf` options on the new
+  command, and the alternative sources in `python data_report.py` (ETF tonnage,
+  GVZ and the stored document counts).
+- `docs/alternative.md`: sources, columns, the endpoints that were tested and
+  rejected (CME warehouse stocks, IMF IFS, WGC downloads, Yahoo) and the
+  licensing notes.
+- The dashboard still runs from the registry, and a new data type reaches the
+  inventory report without code changes (`FLOW-10`).
+- The alternative sources also reach the dashboard: the overview payload carries
+  the ETF tonnage windows, the GVZ window and the newest documents, and the page
+  draws them in a new panel with a table that links to each document.
+
+### Changed
+
+- The facts of the alternative sources moved to `src/core/altstatus.py`, so the
+  text report and the dashboard describe them from one place instead of two
+  copies.
+- The page runtime (labels, fetch, status line) lives in `static/runtime.js`, so
+  the dashboard script stays within the file size limit (`MOD-2`).
+
+### Fixed
+
+- A stored series whose newest row holds no value (for example an IAU row with a
+  price but no tonnage) no longer reports "no value": the latest readable row is
+  used for the summary and the dashboard.
+
+## [1.2.0] - 2026-11-08
+
+### Added
+
+- Local web dashboard: `serve_dashboard.py` plus `src/features/web/` serve the
+  stored price, COT and macro data as one read-only page, with the standard
+  library HTTP server and hand-written SVG charts (no third-party dependency).
+- The page shows totals, one card per price series with the latest close and the
+  stored range, daily candlesticks with a volume strip for a selectable series
+  and 1M/3M/6M/1Y/All window, both stored COT reports as summary and grouped
+  weekly bars, and one sparkline card per FRED series with a detail chart.
+- JSON endpoints `/api/overview`, `/api/series/<key>`, `/api/cot`, `/api/macro`
+  and `/api/refresh` expose the same aggregates to scripts.
+- Daily aggregation of the monthly files in one pass, including the minute-gap
+  counts the `--status` report uses, with two in-process caches so a page load
+  never re-reads a year of minute bars.
+- Every user-facing text of the page lives in `src/features/web/locale.py` and
+  reaches the browser as JSON (`LANG-4`).
+- Test suite for the dashboard under `tests/features/web/`, including a real
+  HTTP server on an ephemeral port; it runs offline.
+- A PID file per address (`<data dir>/dashboard-<port>.pid`) with `--pid-file`
+  and `--no-pid`: a second start on the same port is refused with the pid and
+  the URL of the running instance instead of a raw socket error.
+- Ctrl-C and `kill` (SIGTERM) clear the PID file and stop with exit code 130; a
+  killed run leaves a stale record whose lock is gone, so the next start simply
+  overwrites it.
+- `docs/web.md`: what the page shows, its API, how the aggregates are built and
+  what the dashboard deliberately does not do.
+
 ## [1.1.0] - 2026-11-08
 
 ### Added
