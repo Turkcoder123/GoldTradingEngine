@@ -18,6 +18,7 @@ TIMESTAMP_WIDTH = 19
 _MONTH_FORMAT = "%Y-%m"
 _MONTH_GLOB = "[0-9][0-9][0-9][0-9]-[0-9][0-9]"
 MINUTE_MS = 60_000
+MINUTES_PER_DAY = 24 * 60
 
 
 @dataclass(frozen=True)
@@ -92,30 +93,42 @@ COT_GOLD_MARKET = "GOLD - COMMODITY EXCHANGE INC."
 _COT_SUBDIR = "cot"
 COT_TIMEOUT_SECONDS = 120.0
 
-# FRED (St. Louis Fed). The keyless CSV endpoint needs no API key; when
-# $FRED_API_KEY or secrets/fred_api_key exists, the official API is used.
-# Neither the key nor the secrets folder is ever committed (GIT-6).
-FRED_BASE_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
-FRED_API_URL = "https://api.stlouisfed.org/fred/series/observations"
-FRED_API_KEY_ENV = "FRED_API_KEY"
+# The FRED API key file needs the project directory, so it stays here.
 FRED_API_KEY_FILE = os.path.join(_PROJECT_DIR, "secrets", "fred_api_key")
-_FRED_SUBDIR = "fred"
-FRED_TIMEOUT_SECONDS = 60.0
-FRED_RETRIES = 3
-FRED_RETRY_BACKOFF_SECONDS = 4
-FRED_PAUSE_SECONDS = 1.0
-FRED_SERIES = {
-    "DFII10": "10-year TIPS real yield",
-    "DGS10": "10-year Treasury yield",
-    "DGS2": "2-year Treasury yield",
-    "T10Y2Y": "10-year minus 2-year spread",
-    "T10YIE": "10-year breakeven inflation",
-    "DTWEXBGS": "broad trade-weighted dollar index",
-    "WALCL": "Fed total assets",
-    "CPIAUCSL": "consumer price index",
-    "FEDFUNDS": "effective federal funds rate",
-    "VIXCLS": "CBOE volatility index",
-}
+
+# Registries of the context sources live in their own module (MOD-2) and
+# are re-exported here, so `config.ETF_SERIES` keeps working.
+from .config_sources import (  # noqa: F401 (re-exported on purpose)
+    FRED_API_KEY_ENV,
+    FRED_API_URL,
+    FRED_BASE_URL,
+    FRED_PAUSE_SECONDS,
+    FRED_RETRIES,
+    FRED_RETRY_BACKOFF_SECONDS,
+    FRED_SERIES,
+    FRED_SERIES_DETAIL,
+    FRED_TIMEOUT_SECONDS,
+    fred_dir,
+    ALT_LIMIT_DOCUMENTS,
+    ALT_TIMEOUT_SECONDS,
+    ETF_FIELDS,
+    ETF_SERIES,
+    FED_FEEDS,
+    FED_FIELDS,
+    ISHARES_IAU_URL,
+    RATES_COUNTRIES,
+    RATES_FIELDS,
+    RATES_STALE_MONTHS,
+    RATES_YEAR_DAYS,
+    SPDR_ARCHIVE_URL,
+    VOLATILITY_FIELDS,
+    VOLATILITY_SERIES,
+    _ALT_SUBDIR,
+    _RATES_SUBDIR,
+    alt_dir,
+    rates_dir,
+)
+
 
 # Run defaults, all overridable from the command line.
 DEFAULT_SEGMENT_HOURS = 24
@@ -179,8 +192,3 @@ def data_file_pattern(data_dir: str, side: str = DEFAULT_SIDE,
 def cot_dir(data_dir: str) -> str:
     """Where the COT exports live: <data dir>/cot."""
     return os.path.join(data_dir, _COT_SUBDIR)
-
-
-def fred_dir(data_dir: str) -> str:
-    """Where the FRED series live: <data dir>/fred."""
-    return os.path.join(data_dir, _FRED_SUBDIR)

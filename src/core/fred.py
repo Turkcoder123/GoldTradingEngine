@@ -50,7 +50,7 @@ class FredSummary:
         return dict(self.__dict__)
 
 
-def _series_path(data_dir: str, series_id: str) -> str:
+def series_path(data_dir: str, series_id: str) -> str:
     """Path of one stored series."""
     return os.path.join(config.fred_dir(data_dir), f"{series_id}.csv")
 
@@ -112,7 +112,7 @@ def status(data_dir: str, series_ids=None) -> dict:
     wanted = series_ids or config.FRED_SERIES
     summaries = {}
     for series_id in wanted:
-        path = _series_path(data_dir, series_id)
+        path = series_path(data_dir, series_id)
         if not os.path.exists(path):
             continue
         summaries[series_id] = summarize(series_id, read_stored(path))
@@ -132,7 +132,7 @@ def update_fred(data_dir: str, series_ids=None) -> FredResult:
             return FredResult(files=tuple(files), counts=counts,
                               summaries=summaries, error=str(exc))
         name = f"{series_id}.csv"
-        counts[name] = write_csv(_series_path(data_dir, series_id), rows)
+        counts[name] = write_csv(series_path(data_dir, series_id), rows)
         summaries[series_id] = summarize(series_id, rows)
         files.append(name)
     return FredResult(files=tuple(files), counts=counts, summaries=summaries)

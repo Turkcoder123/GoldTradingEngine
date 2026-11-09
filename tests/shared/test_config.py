@@ -3,10 +3,13 @@
 import datetime as dt
 import glob
 import os
+import pathlib
 
 import pytest
 
 from src.shared import config
+
+_DOCS = pathlib.Path(__file__).resolve().parents[2] / "docs"
 
 
 def test_month_path_keeps_the_plain_name_for_the_bid_side(tmp_path):
@@ -108,3 +111,60 @@ def test_lock_path_uses_the_data_dir_unless_overridden(monkeypatch, tmp_path):
     override = os.path.join(str(tmp_path), "locks")
     assert config.lock_path(str(tmp_path), override) == os.path.join(
         override, config.LOCK_NAME)
+
+
+def test_every_price_series_is_listed_in_the_data_guide():
+    """`FLOW-10`: a new data type also reaches the documentation."""
+    text = (_DOCS / "data.md").read_text(encoding="utf-8")
+    for key in config.SERIES:
+        assert key in text, key
+
+
+def test_every_macro_series_is_listed_in_the_macro_guide():
+    """`FLOW-10`: a new macro series also reaches its guide."""
+    text = (_DOCS / "macro.md").read_text(encoding="utf-8")
+    for series_id in config.FRED_SERIES:
+        assert series_id in text, series_id
+
+
+def test_the_fred_detail_registry_covers_every_series():
+    """The report reads unit and frequency from this registry, so it must match."""
+    assert set(config.FRED_SERIES_DETAIL) == set(config.FRED_SERIES)
+
+
+def test_every_etf_fund_is_listed_in_the_alternative_guide():
+    """`FLOW-10`: a new fund also reaches its guide."""
+    text = (_DOCS / "alternative.md").read_text(encoding="utf-8")
+    for key, entry in config.ETF_SERIES.items():
+        assert key in text, key
+        assert entry["label"] in text, key
+
+
+def test_every_volatility_series_is_listed_in_the_alternative_guide():
+    text = (_DOCS / "alternative.md").read_text(encoding="utf-8")
+    for key, entry in config.VOLATILITY_SERIES.items():
+        assert key in text, key
+        assert entry["url"] in text, key
+
+
+def test_every_fed_feed_is_listed_in_the_alternative_guide():
+    text = (_DOCS / "alternative.md").read_text(encoding="utf-8")
+    for name, url in config.FED_FEEDS.items():
+        assert url in text, name
+
+
+def test_every_rate_country_is_listed_in_the_rates_guide():
+    """`FLOW-10`: a new country also reaches its guide."""
+    text = (_DOCS / "rates.md").read_text(encoding="utf-8")
+    for code, entry in config.RATES_COUNTRIES.items():
+        assert code in text, code
+        assert entry["yield"] in text, code
+        inflation = entry.get("cpi") or entry["cpi_index"]
+        assert inflation in text, code
+
+
+def test_the_alternative_files_are_named_once():
+    """Every stored series owns its file, so two sources cannot collide."""
+    files = [entry["file"] for entry in config.ETF_SERIES.values()]
+    files += [entry["file"] for entry in config.VOLATILITY_SERIES.values()]
+    assert len(files) == len(set(files))
