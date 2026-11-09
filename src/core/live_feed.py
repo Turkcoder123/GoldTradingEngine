@@ -96,13 +96,21 @@ class LiveSession:
         return resolved
 
     def _refresh_boundary(self, series_key: str) -> int:
-        """Reads the stored range at most once per interval and prunes."""
+        """Reads the stored range at most once per interval and prunes.
+
+        When the keeper caught up with the buffer, the bars it now covers are
+        dropped and the published document is refreshed immediately, so the
+        dashboard never draws a live bar that the stored history already holds.
+        """
         moment = self._clock()
         if moment - self._boundary_at[series_key] < self._boundary_seconds:
-            return self.buffers[series_key].boundary_ms
+            return 0
         self._boundary_at[series_key] = moment
-        return self.buffers[series_key].prune(
+        removed = self.buffers[series_key].prune(
             stored_through(self.data_dir, series_key, self.side))
+        if removed:
+            self._publish()
+        return removed
 
     def _accept_tick(self, tick) -> None:
         """Buffers one tick and reports the bar that a new minute closed."""

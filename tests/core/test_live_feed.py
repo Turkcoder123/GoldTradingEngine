@@ -126,6 +126,20 @@ def test_a_failing_snapshot_is_reported_and_disabled(write_month, tmp_path):
     assert any("live snapshot" in text for text in reports)
 
 
+def test_a_prune_republishes_the_snapshot(write_month, tmp_path):
+    from src.core import live_snapshot
+    _stored(write_month, tmp_path, "xauusd", 0)
+    session = _session(tmp_path, series=["xauusd"])
+    session._accept_tick(_tick(offset_seconds=90))
+    session._accept_tick(_tick(offset_seconds=150))
+    _stored(write_month, tmp_path, "xauusd", 0, 1)
+    session._accept_tick(_tick(offset_seconds=210))
+    document = live_snapshot.read(live_snapshot.path(str(tmp_path)))
+    minutes = [bar["minute"] for bar in document["series"]["xauusd"]]
+    assert timeutil.ts_to_text(BASE + MINUTE) not in minutes
+    assert minutes[-1] == timeutil.ts_to_text(BASE + 3 * MINUTE)
+
+
 class _Fetch:
     """Records every poll and answers the rows it was built with."""
 
