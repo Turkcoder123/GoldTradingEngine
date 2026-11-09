@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/panels.css">
+<link rel="stylesheet" href="/static/alt.css">
+<link rel="stylesheet" href="/static/smc.css">
+</head>
+<body data-version="{{VERSION}}">
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1 id="app-title"></h1>
+      <p id="app-subtitle" class="muted small"></p>
+    </div>
+    <div class="topbar-actions">
+      <span id="app-version" class="badge"></span>
+      <button id="refresh" class="button" type="button"></button>
+    </div>
+  </header>
+  <p id="status-line" class="status-line" role="status" hidden></p>
+
+  <section class="panel" id="overview-panel">
+    <div class="panel-head">
+      <h2 id="overview-title"></h2>
+    </div>
+    <div id="kpi-strip" class="kv-strip"></div>
+    <div id="series-grid" class="card-grid"></div>
+  </section>
+
+  <section class="panel" id="price-panel">
+    <div class="panel-head">
+      <h2 id="price-title"></h2>
+      <div class="toolbar">
+        <div id="series-chips" class="chips"></div>
+        <div id="range-chips" class="chips"></div>
+      </div>
+    </div>
+    <div id="price-summary" class="kv-strip"></div>
+    <div id="price-chart" class="chart"></div>
+    <p id="price-note" class="muted small note"></p>
+  </section>
+
+  <section class="panel" id="smc-panel">
+    <div class="panel-head">
+      <h2 id="smc-title"></h2>
+      <p id="smc-note" class="muted small"></p>
+    </div>
+    <div id="smc-toggles" class="chips"></div>
+    <div id="smc-summary" class="kv-strip"></div>
+    <div id="smc-events"></div>
+  </section>
+
+  <section class="panel" id="cot-panel">
+    <div class="panel-head">
+      <h2 id="cot-title"></h2>
+      <p id="cot-note" class="muted small"></p>
+    </div>
+    <div id="cot-summary" class="stat-grid"></div>
+    <div id="cot-chart" class="chart"></div>
+  </section>
+
+  <section class="panel" id="macro-panel">
+    <div class="panel-head">
+      <h2 id="macro-title"></h2>
+      <p id="macro-note" class="muted small"></p>
+    </div>
+    <div id="macro-grid" class="macro-grid"></div>
+    <div id="macro-chart" class="chart"></div>
+    <div class="chart-grid">
+      <figure class="chart-card">
+        <figcaption id="macro-rates-caption" class="muted small"></figcaption>
+        <div id="macro-rates-chart" class="chart"></div>
+      </figure>
+      <div id="macro-rates"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="alt-panel">
+    <div class="panel-head">
+      <h2 id="alt-title"></h2>
+      <p id="alt-note" class="muted small"></p>
+    </div>
+    <div id="alt-summary" class="kv-strip"></div>
+    <div class="chart-grid">
+      <figure class="chart-card">
+        <figcaption id="alt-tonnes-title" class="muted small"></figcaption>
+        <div id="alt-tonnes-chart" class="chart"></div>
+      </figure>
+      <figure class="chart-card">
+        <figcaption id="alt-gvz-title" class="muted small"></figcaption>
+        <div id="alt-gvz-chart" class="chart"></div>
+      </figure>
+    </div>
+    <div id="alt-documents" class="documents"></div>
+  </section>
+
+  <footer class="footer">
+    <p id="footer-note" class="muted small"></p>
+  </footer>
+</div>
+<script type="application/json" id="dashboard-config">{{LABELS}}</script>
+<script src="/static/chart_core.js"></script>
+<script src="/static/chart_line.js"></script>
+<script src="/static/chart_bars.js"></script>
+<script src="/static/chart_candle.js"></script>
+<script src="/static/chart_smc.js"></script>
+<script src="/static/sparkline.js"></script>
+<script src="/static/dom.js"></script>
+<script src="/static/overview_panel.js"></script>
+<script src="/static/price_panel.js"></script>
+<script src="/static/smc_panel.js"></script>
+<script src="/static/cot_panel.js"></script>
+<script src="/static/macro_panel.js"></script>
+<script src="/static/alt_panel.js"></script>
+<script src="/static/runtime.js"></script>
+<script src="/static/layout.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/* SMC overlay marks and the structure table of the dashboard. */
+.smc-zone { stroke: none; pointer-events: none; }
+
+.smc-level {
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.smc-label { fill: var(--gold); font-size: 10px; pointer-events: none; }
+
+.smc-marker { pointer-events: none; opacity: 0.9; }
+
+.smc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.smc-table th,
+.smc-table td {
+  text-align: left;
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.smc-table th {
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.smc-table td.num,
+.smc-table th:nth-child(4) { text-align: right; }
+
+@media (max-width: 520px) {
+  .smc-table th:nth-child(5),
+  .smc-table td:nth-child(5) { display: none; }
+}
