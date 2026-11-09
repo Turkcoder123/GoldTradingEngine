@@ -26,6 +26,7 @@ version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 | `update_alt.py` | Entry point of the alternative sources (ETF gold, GVZ, Fed documents). |
 | `update_rates.py` | Entry point of the derived real interest rates (per country). |
 | `serve_dashboard.py` | Entry point of the local web dashboard (read-only). |
+| `stream_live.py` | Entry point of the temporary live layer (memory only). |
 | `data_report.py` | Entry point of the text data inventory (`data_report.txt`). |
 | `src/shared/` | Constants, series registry, UTC time helpers, `VERSION` reader. |
 | `src/core/` | Domain layer: prices, COT, FRED, ETF gold, GVZ, Fed documents, SMC structures. |
@@ -33,7 +34,7 @@ version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 | `src/features/web/` | Dashboard: payload builders, HTTP server, labels, static assets. |
 | `src/features/report/` | Plain text inventory of everything stored (`data_report.txt`). |
 | `tests/` | Test suite mirroring `src/` (`MOD-9`); run with `python -m pytest`. |
-| `docs/` | `data.md`, `cot.md`, `macro.md`, `alternative.md`, `web.md`. |
+| `docs/` | `data.md`, `cot.md`, `macro.md`, `alternative.md`, `rates.md`, `smc.md`, `web.md`, `live.md`. |
 
 Dependency direction is one way (`MOD-6`): `features` uses `core`, `core` uses
 `shared`, and `shared` imports nothing from the other two layers.
@@ -253,6 +254,29 @@ macro panel, and `python data_report.py` prints the same table. A series older
 than six months is marked `STALE` instead of pretending to be current. The
 formula, the series ids and the limits are in `docs/rates.md`.
 
+## Temporary live layer (SiftingIO, plus the polled dollar index)
+
+`stream_live.py` keeps a live window of XAU/USD, EUR/USD and the dollar index in
+memory and prints every bar that closes. Gold and EUR/USD come from the
+SiftingIO WebSocket (bid/ask ticks, about a hundred milliseconds apart); the
+dollar index has no tick provider, so its 1-minute bars are polled from the
+Dukascopy feed once a minute. It is an overlay only: the keeper stays the
+authority, nothing is appended to the stored CSVs, and every live bar the
+keeper later covers is dropped from the buffer.
+
+```sh
+cp .env.example .env        # fill in SIFTING_API_KEY, keep it out of git
+python stream_live.py                       # all three series
+python stream_live.py --series dxy           # no API key needed
+python stream_live.py --json --seconds 120
+```
+
+The layer needs the one approved third-party dependency
+(`python -m pip install websocket-client`, `OPEN-6`), imported lazily so every
+other command and the whole test suite stay standard library only. One SiftingIO
+socket carries both streamed symbols (free tier: 1 connection, 5 subscriptions).
+See `docs/live.md` for the protocol, the precedence rules and the limits.
+
 ## Documentation
 
 | Document | Content |
@@ -264,6 +288,7 @@ formula, the series ids and the limits are in `docs/rates.md`.
 | `docs/rates.md` | Real interest rates: formula, country registry, limits |
 | `docs/smc.md` | Smart money structures: rules, look-ahead, zones, overlay, API, limits |
 | `docs/web.md` | Dashboard: what it shows, its API, how the aggregates are built |
+| `docs/live.md` | Temporary live layer: SiftingIO protocol, DXY poll, precedence, limits |
 | `rules.md` | Project rule set: language, versioning, git, modularity, workflow |
 
 ## Development
@@ -273,6 +298,9 @@ python -m pytest          # full test suite, no network access
 ```
 
 No third-party dependency is required or allowed without approval (`CODE-6`).
+The single exception is `websocket-client` for the optional live layer
+(`OPEN-6`); it is imported lazily, so the tests and every other entry point run
+without it.
 
 ## Version
 

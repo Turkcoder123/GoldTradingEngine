@@ -9,7 +9,26 @@ version is tagged in git as `vX.Y.Z`.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Added
+
+- `stream_live.py` plus `src/core/live_*.py`: a temporary live layer for
+  XAU/USD, EUR/USD and the dollar index, aggregated into 1-minute bars in
+  memory and printed as each bar closes. Gold and EUR/USD stream from SiftingIO
+  over one WebSocket (bid/ask ticks, epoch-millisecond timestamps); the dollar
+  index has no tick provider, so its bars are polled from the Dukascopy feed
+  once a minute. Nothing is appended to the stored CSV history: a bar at or
+  before the newest stored minute of its own series is refused, and every live
+  bar the keeper later covers is dropped.
+- `eurusd` price series: EUR/USD joins the keeper, so its 1-minute history is
+  stored like the gold complex and feeds the boundary of the live layer.
+- `src/shared/envfile.py` and `.env.example`: a minimal `.env` reader, so the
+  SiftingIO key comes from the process environment or a local `.env` file. The
+  environment always wins and `.env` stays out of git (`GIT-6`).
+- `docs/live.md`: setup, the SiftingIO protocol, the dollar index poll, the
+  precedence rules and the limits of the live layer.
+- `OPEN-6` records the approved `websocket-client` dependency: the live layer is
+  its only user and it is imported lazily, so every other command and the whole
+  test suite keep running with the standard library only.
 
 ## [1.5.0] - 2026-11-09
 
