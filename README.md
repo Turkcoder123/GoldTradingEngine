@@ -61,6 +61,7 @@ Series (`--series`), all stored in the same CSV format and time frame:
 | `xauaud` | `XAU/AUD` | gold in Australian dollars | `xauaud_1m_*.csv` |
 | `xaujpy` | `XAU/JPY` | gold in yen | `xaujpy_1m_*.csv` |
 | `dxy` | `DOLLAR.IDX/USD` | US Dollar Index | `dxy_1m_*.csv` |
+| `eurusd` | `EUR/USD` | euro in dollars | `eurusd_1m_*.csv` |
 
 Not offered by the Dukascopy chart service: platinum, palladium, gold miner and
 gold ETF contracts (they answer with null prices, which the keeper rejects).

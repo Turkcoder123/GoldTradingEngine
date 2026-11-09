@@ -37,6 +37,7 @@ file prefix (`--series`):
 | `xauaud` | `XAU/AUD` | `xauaud_1m` | ~23 h/day |
 | `xaujpy` | `XAU/JPY` | `xaujpy_1m` | ~23 h/day |
 | `dxy` | `DOLLAR.IDX/USD` | `dxy_1m` | ~20.5 h/day |
+| `eurusd` | `EUR/USD` | `eurusd_1m` | ~23 h/day |
 
 The registry lives in `config.SERIES`; the prefix is always `<key>_1m`, so no two
 series can write into the same file.

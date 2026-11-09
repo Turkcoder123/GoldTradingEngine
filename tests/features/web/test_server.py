@@ -11,6 +11,7 @@ from http.server import ThreadingHTTPServer
 import pytest
 
 from src.features.web import server
+from src.shared import config
 
 ROWS = [
     ("2026-11-06 23:00:00", 11, 12, 10, 11.5, 1),
@@ -63,7 +64,7 @@ def test_overview_lists_every_series(base_url):
     body = get_json(base_url + "/api/overview")
     assert body["ok"] is True
     assert body["section"] == "overview"
-    assert len(body["data"]["series"]) == 8
+    assert len(body["data"]["series"]) == len(config.SERIES)
     assert body["data"]["totals"]["files"] == 0
     assert body["version"]
 

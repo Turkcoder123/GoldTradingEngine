@@ -43,6 +43,7 @@ SERIES = {
     "xauaud": Series("xauaud", "XAU/AUD"),
     "xaujpy": Series("xaujpy", "XAU/JPY"),
     "dxy": Series("dxy", "DOLLAR.IDX/USD"),
+    "eurusd": Series("eurusd", "EUR/USD"),
 }
 DEFAULT_SERIES = "xauusd"
 PREFIX = SERIES[DEFAULT_SERIES].prefix
