@@ -131,10 +131,12 @@ from .config_sources import (  # noqa: F401 (re-exported on purpose)
 )
 
 
-# Run defaults, all overridable from the command line.
+# Run defaults, all overridable from the command line. The keepers refresh
+# every five minutes: the free chart service serves a minute behind, so a faster
+# loop would mostly re-ask for data that is already stored.
 DEFAULT_SEGMENT_HOURS = 24
 DEFAULT_SEGMENTS = 8
-DEFAULT_INTERVAL_MINUTES = 15.0
+DEFAULT_INTERVAL_MINUTES = 5.0
 MIN_INTERVAL_MINUTES = 0.5
 DEFAULT_TIMEOUT_SECONDS = 20.0
 DEFAULT_RETRIES = 2

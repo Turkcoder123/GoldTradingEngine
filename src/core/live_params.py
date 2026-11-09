@@ -53,7 +53,7 @@ RECONNECT_MAX_SECONDS = 60.0
 DXY_SERIES = "dxy"
 DXY_POLL_SECONDS = 60.0
 
-# Buffer and precedence defaults: a few hours of live bars cover the fifteen
+# Buffer and precedence defaults: a few hours of live bars cover the five
 # minute Dukascopy refresh many times over.
 BUFFER_MINUTES = 180
 BOUNDARY_REFRESH_SECONDS = 60.0
