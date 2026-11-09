@@ -28,6 +28,10 @@ __pycache__/
 # Generated market data and runtime state (GIT-6, FLOW-9)
 xauusd_data/
 *.lock
+*.pid
+
+# Reference archives kept out of the tree (GIT-10, FLOW-9)
+*.zip
 
 # Local Python environment (the project itself needs no dependency)
 .venv/
