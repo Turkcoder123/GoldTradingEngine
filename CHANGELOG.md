@@ -9,7 +9,22 @@ version is tagged in git as `vX.Y.Z`.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Added
+
+- `stream_live.py` plus `src/core/live_*.py`: a temporary XAU/USD live stream
+  from Twelve Data. Ticks are aggregated into 1-minute bars in memory, a bar is
+  printed as soon as the next minute starts, and nothing is appended to the
+  stored CSV history: Dukascopy stays the authoritative source. A tick at or
+  before the newest stored minute is refused, and every live bar the keeper
+  later covers is dropped from the buffer.
+- `src/shared/envfile.py` and `.env.example`: a minimal `.env` reader, so the
+  provider key comes from the process environment or a local `.env` file. The
+  environment always wins and `.env` stays out of git (`GIT-6`).
+- `docs/live.md`: setup, the WebSocket protocol, the data precedence rules and
+  the limits of the live layer.
+- `OPEN-6` records the approved `websocket-client` dependency: the live feed is
+  its only user and it is imported lazily, so every other command and the whole
+  test suite keep running with the standard library only.
 
 ## [1.5.0] - 2026-11-09
 

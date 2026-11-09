@@ -26,14 +26,15 @@ version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 | `update_alt.py` | Entry point of the alternative sources (ETF gold, GVZ, Fed documents). |
 | `update_rates.py` | Entry point of the derived real interest rates (per country). |
 | `serve_dashboard.py` | Entry point of the local web dashboard (read-only). |
+| `stream_live.py` | Entry point of the temporary Twelve Data live stream (memory only). |
 | `data_report.py` | Entry point of the text data inventory (`data_report.txt`). |
 | `src/shared/` | Constants, series registry, UTC time helpers, `VERSION` reader. |
-| `src/core/` | Domain layer: prices, COT, FRED, ETF gold, GVZ, Fed documents, SMC structures. |
+| `src/core/` | Domain layer: prices, COT, FRED, ETF gold, GVZ, Fed documents, SMC structures, live feed. |
 | `src/features/cli/` | Command line surfaces: parsers, report writers, wiring. |
 | `src/features/web/` | Dashboard: payload builders, HTTP server, labels, static assets. |
 | `src/features/report/` | Plain text inventory of everything stored (`data_report.txt`). |
 | `tests/` | Test suite mirroring `src/` (`MOD-9`); run with `python -m pytest`. |
-| `docs/` | `data.md`, `cot.md`, `macro.md`, `alternative.md`, `web.md`. |
+| `docs/` | `data.md`, `cot.md`, `macro.md`, `alternative.md`, `rates.md`, `smc.md`, `web.md`, `live.md`. |
 
 Dependency direction is one way (`MOD-6`): `features` uses `core`, `core` uses
 `shared`, and `shared` imports nothing from the other two layers.
@@ -252,6 +253,26 @@ macro panel, and `python data_report.py` prints the same table. A series older
 than six months is marked `STALE` instead of pretending to be current. The
 formula, the series ids and the limits are in `docs/rates.md`.
 
+## Temporary live feed (Twelve Data)
+
+`stream_live.py` streams XAU/USD ticks from Twelve Data into an in-memory
+1-minute buffer and prints every bar the stream closes. It is an overlay only:
+Dukascopy stays the authoritative source, nothing is appended to the stored
+CSVs, and the live window is dropped as soon as the keeper stores those minutes.
+
+```sh
+cp .env.example .env        # fill in TWELVE_DATA_API_KEY, keep it out of git
+python stream_live.py                 # stream until interrupted
+python stream_live.py --json --seconds 60
+```
+
+The feed needs the one approved third-party dependency
+(`python -m pip install websocket-client`, `OPEN-6`), imported lazily so every
+other command and the whole test suite stay standard library only. The key is
+read from `$TWELVE_DATA_API_KEY` or `.env`, sent in a request header and never
+printed. See `docs/live.md` for the protocol, the precedence rules and the
+limits of the data.
+
 ## Documentation
 
 | Document | Content |
@@ -263,6 +284,7 @@ formula, the series ids and the limits are in `docs/rates.md`.
 | `docs/rates.md` | Real interest rates: formula, country registry, limits |
 | `docs/smc.md` | Smart money structures: rules, look-ahead, zones, overlay, API, limits |
 | `docs/web.md` | Dashboard: what it shows, its API, how the aggregates are built |
+| `docs/live.md` | Temporary Twelve Data live feed: setup, protocol, precedence, limits |
 | `rules.md` | Project rule set: language, versioning, git, modularity, workflow |
 
 ## Development
@@ -272,6 +294,9 @@ python -m pytest          # full test suite, no network access
 ```
 
 No third-party dependency is required or allowed without approval (`CODE-6`).
+The single exception is `websocket-client` for the optional live feed
+(`OPEN-6`); it is imported lazily, so the tests and every other entry point run
+without it.
 
 ## Version
 

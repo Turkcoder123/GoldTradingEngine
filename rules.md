@@ -123,6 +123,7 @@ Resolved items keep their ID for reference (`META-3`).
 | OPEN-3 | Is Turkish user-facing text required? If yes, the `tr` locale file becomes the only place where Turkish is permitted. | `LANG-4` |
 | OPEN-4 | Should releases be automated by a `scripts/release` step that bumps `VERSION`, updates `CHANGELOG.md`, and tags the commit? | `VER-3`, `VER-5`, `VER-6` |
 | OPEN-5 | **Resolved by the user:** the project is released under GPL-3.0; the license text lives in `LICENSE` at the repository root. | `GIT-8` |
+| OPEN-6 | **Resolved by the user:** `websocket-client` is approved as the only third-party runtime dependency, for the optional live feed only (`docs/live.md`). It is imported lazily, every other part stays standard library only, and the test suite runs without it. | `OPEN-2`, `CODE-6` |
 
 ---
 
