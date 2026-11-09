@@ -4,10 +4,12 @@ Project workspace repository, versioned with git and governed by a written rule 
 
 ## Status
 
-Initialized, with one application that has four parts, all Python 3 and
+Initialized, with one application that has seven parts, all Python 3 and
 standard library only: a 1-minute price keeper for the gold complex and the
-dollar index, a weekly CFTC COT export, a FRED macro export, and a local web
-dashboard that shows the stored data. The project
+dollar index, a weekly CFTC COT export, a FRED macro export, the alternative
+context sources (ETF gold, GVZ, Fed documents), the derived real interest
+rates, a text inventory of everything stored, and a local web dashboard that
+shows the data. The project
 version lives in the `VERSION` file (see `VER-3` in `rules.md`).
 
 ## Repository layout
@@ -282,6 +284,11 @@ Current version:
 ```sh
 cat VERSION
 ```
+
+## License
+
+The project is released under GPL-3.0; the license text is the `LICENSE` file
+at the repository root (`OPEN-5` in `rules.md`).
 
 ## Contributing
 

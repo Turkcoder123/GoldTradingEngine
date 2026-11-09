@@ -9,13 +9,17 @@ version is tagged in git as `vX.Y.Z`.
 
 ## [Unreleased]
 
+No unreleased changes.
+
+## [1.5.0] - 2026-11-09
+
 ### Added
 
 - Smart money structures over the price chart: `src/core/smc*.py` detects
   confirmed swing highs and lows, BOS and CHoCH, liquidity sweeps, order blocks
   and fair value gaps on the stored bars, ported from the SMC pattern discovery
-  system v0.1 (`smc_pattern_system_v0_1.zip`) to the standard library, so the
-  pandas dependency of the reference is not needed. Every structure reports
+  system v0.1 reference implementation to the standard library, so the pandas
+  dependency of the reference is not needed. Every structure reports
   `pattern_at` and `detected_at`, so a pivot is never read before the bars to its
   right had closed, and every zone reports where it was touched and filled.
 - `GET /api/smc/<key>?months=N`: the structures of one price window, each with
