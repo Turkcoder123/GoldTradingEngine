@@ -111,6 +111,24 @@ def test_main_is_quiet_when_asked(monkeypatch, capsys):
     assert capsys.readouterr().out == ""
 
 
+def test_the_snapshot_flags_are_forwarded(monkeypatch):
+    seen = {}
+
+    class Recorder(_FakeSession):
+        def __init__(self, data_dir, series, side, minutes, on_bar=None,
+                     **kwargs):
+            seen.update(kwargs)
+            super().__init__(data_dir, series, side, minutes, on_bar)
+
+    monkeypatch.setattr(live_app.live_feed, "LiveSession", Recorder)
+    assert live_app.main(["--series", "dxy", "--quiet", "--no-snapshot"]) == 0
+    assert seen == {"publish": False, "snapshot_path": None}
+    seen.clear()
+    assert live_app.main(["--series", "dxy", "--quiet",
+                          "--snapshot", "/tmp/x.json"]) == 0
+    assert seen == {"publish": True, "snapshot_path": "/tmp/x.json"}
+
+
 def test_an_interrupt_exits_with_the_shell_convention(monkeypatch, capsys):
     class Interrupted(_FakeSession):
         def run(self, max_seconds=None):

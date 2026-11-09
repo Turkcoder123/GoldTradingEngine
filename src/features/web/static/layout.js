@@ -14,6 +14,7 @@ const DashboardLayout = (function () {
       rangeChips: document.getElementById("range-chips"),
       priceSummary: document.getElementById("price-summary"),
       priceChart: document.getElementById("price-chart"),
+      priceLive: document.getElementById("price-live"),
       smc: {
         title: document.getElementById("smc-title"),
         note: document.getElementById("smc-note"),

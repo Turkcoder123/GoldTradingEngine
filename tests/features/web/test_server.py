@@ -60,6 +60,14 @@ def test_page_is_served_with_the_labels_and_the_title(base_url):
     assert 'id="dashboard-config"' in html
 
 
+def test_live_endpoint_answers_the_overlay(base_url):
+    body = get_json(base_url + "/api/live")
+    assert body["ok"] is True
+    assert body["section"] == "live"
+    assert body["data"]["series"] == {}
+    assert "source" in body["data"]
+
+
 def test_overview_lists_every_series(base_url):
     body = get_json(base_url + "/api/overview")
     assert body["ok"] is True

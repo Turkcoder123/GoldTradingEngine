@@ -1,4 +1,4 @@
-/* Price panel: window summary plus the daily candlestick chart. */
+/* Price panel: window summary, live overlay and the daily candlestick chart. */
 "use strict";
 
 const DashboardPricePanel = (function () {
@@ -27,14 +27,75 @@ const DashboardPricePanel = (function () {
       close: labels["price.close"],
       volume: labels["price.volume"],
       bars: labels["price.bars"],
-      empty: labels["price.empty"]
+      empty: labels["price.empty"],
+      live: labels["price.live"]
     };
   }
 
-  function render(panel, data, labels, overlays) {
+  function liveMinutes(live, key) {
+    if (!live || live.stale || !live.series) {
+      return [];
+    }
+    return live.series[key] || [];
+  }
+
+  function mergeLive(bars, minutes) {
+    const merged = bars.slice();
+    minutes.forEach(function (minute) {
+      const day = minute.minute.slice(0, 10);
+      const last = merged[merged.length - 1];
+      if (last && last.day === day) {
+        merged[merged.length - 1] = {
+          day: day,
+          open: last.open,
+          high: Math.max(last.high, minute.high),
+          low: Math.min(last.low, minute.low),
+          close: minute.close,
+          volume: last.volume,
+          count: (last.count || 0) + (minute.ticks || 0),
+          live: true
+        };
+        return;
+      }
+      if (!last || day > last.day) {
+        merged.push({
+          day: day,
+          open: minute.open,
+          high: minute.high,
+          low: minute.low,
+          close: minute.close,
+          volume: minute.volume || 0,
+          count: minute.ticks || 0,
+          live: true
+        });
+      }
+    });
+    return merged;
+  }
+
+  function renderLive(node, live, minutes, labels) {
+    if (!node) {
+      return;
+    }
+    if (!minutes.length) {
+      node.hidden = true;
+      return;
+    }
+    const last = minutes[minutes.length - 1];
+    node.hidden = false;
+    node.classList.toggle("stale", Boolean(live.stale));
+    node.innerHTML = '<span class="dot"></span>' + labels["price.live"] + " " +
+      ChartCore.fmtValue(last.close) + " &middot; " +
+      last.minute.slice(11, 16) + " UTC &middot; " + minutes.length + " " +
+      labels["price.live_bars"];
+  }
+
+  function render(panel, data, labels, overlays, live) {
     DomKit.keyValueStrip(panel.priceSummary, summaryRows(data, labels));
-    ChartCandle.render(panel.priceChart, data.bars, chartLabels(labels),
-                       overlays);
+    const minutes = liveMinutes(live, data.key);
+    renderLive(panel.priceLive, live, minutes, labels);
+    ChartCandle.render(panel.priceChart, mergeLive(data.bars, minutes),
+                       chartLabels(labels), overlays);
   }
 
   return {render: render};

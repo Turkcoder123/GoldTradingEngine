@@ -54,22 +54,60 @@
 .change.up { color: var(--up); }
 .change.down { color: var(--down); }
 
-.chart { position: relative; width: 100%; }
+.chart { position: relative; width: 100%; border-radius: 10px;
+         background: linear-gradient(180deg, rgba(22, 27, 34, 0.55),
+                                            rgba(13, 17, 23, 0.15)); }
 .chart-svg { display: block; width: 100%; height: auto; }
 
 .chart-label { fill: var(--muted); font-size: 10px; }
 .chart-label.dim { fill: #4c566a; }
+.chart-label.axis { fill: #6e7681; font-size: 9.5px; }
+.chart-label.strong { fill: var(--text); font-size: 10px; font-weight: 600; }
 .chart-grid { stroke: #21262d; stroke-width: 1; }
+.chart-tick { stroke: #30363d; stroke-width: 1; }
 .chart-zero { stroke: #3b4450; stroke-width: 1; stroke-dasharray: 3 3; }
 .chart-crosshair { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart-crosshair-set { pointer-events: none; }
+.chart-tag-bg { fill: #0b0f16; stroke: var(--line); stroke-width: 1; }
+.chart-lastline { stroke-width: 1; stroke-dasharray: 5 4; opacity: 0.9; }
 .chart-overlay { cursor: crosshair; }
 
 .candle-wick { stroke-width: 1; }
 .candle-body { stroke: none; }
+.candle-wick.live { stroke-dasharray: 2 2; }
+.candle-body.live { fill: none; stroke-width: 1.2; stroke-dasharray: 3 2; }
 .candle-volume { opacity: 0.35; }
+.candle-volume.live { opacity: 0.28; }
 .line-path { stroke-width: 1.6; }
 .bar { opacity: 0.9; }
 .spark-path { stroke-width: 1.4; }
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 179, 65, 0.45);
+  background: rgba(227, 179, 65, 0.12);
+  color: var(--text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-badge[hidden] { display: none; }
+.live-badge .dot { background: var(--gold); margin: 0;
+                   animation: live-pulse 1.8s ease-in-out infinite; }
+.live-badge.stale { border-color: var(--line); background: transparent;
+                    color: var(--muted); }
+.live-badge.stale .dot { background: var(--muted); animation: none; }
+.tip-row.live b { color: var(--gold); }
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(227, 179, 65, 0.55); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(227, 179, 65, 0); }
+}
 
 .chart-empty {
   margin: 0;

@@ -13,6 +13,7 @@ const DashboardApp = (function () {
     months: 3,
     price: null,
     smc: null,
+    live: null,
     cot: null,
     macro: null,
     groups: {structure: true, zones: true, sweeps: true, swings: false}
@@ -67,7 +68,8 @@ const DashboardApp = (function () {
     if (!state.price) {
       return;
     }
-    DashboardPricePanel.render(PANELS, state.price, LABELS, overlays());
+    DashboardPricePanel.render(PANELS, state.price, LABELS, overlays(),
+                               state.live);
   }
 
   function renderSmc() {
@@ -89,6 +91,15 @@ const DashboardApp = (function () {
     } catch (error) {
       status(label("app.failed") + ": " + error.message, "error");
     }
+  }
+
+  async function loadLive() {
+    try {
+      state.live = await request("/api/live");
+    } catch (error) {
+      state.live = null;
+    }
+    renderPrice();
   }
 
   async function loadSmc() {
@@ -134,6 +145,7 @@ const DashboardApp = (function () {
     renderAlt();
     status("");
     loadPrice();
+    loadLive();
     loadSmc();
     loadCot();
     loadMacro();
@@ -146,7 +158,8 @@ const DashboardApp = (function () {
       state.overview = await request("/api/overview");
       renderOverview();
       renderAlt();
-      await Promise.all([loadPrice(), loadSmc(), loadCot(), loadMacro()]);
+      await Promise.all([loadPrice(), loadLive(), loadSmc(), loadCot(),
+                         loadMacro()]);
       status("");
     } catch (error) {
       status(label("app.failed") + ": " + error.message, "error");
@@ -171,10 +184,21 @@ const DashboardApp = (function () {
     }, 200);
   }
 
+  const LIVE_POLL_MS = 20000;
+
+  function startLivePolling() {
+    setInterval(function () {
+      if (!document.hidden) {
+        loadLive();
+      }
+    }, LIVE_POLL_MS);
+  }
+
   function init() {
     document.getElementById("refresh").addEventListener("click", refresh);
     window.addEventListener("resize", onResize);
     boot();
+    startLivePolling();
   }
 
   if (document.readyState === "loading") {

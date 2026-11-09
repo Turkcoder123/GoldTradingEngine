@@ -6,7 +6,8 @@ payload building can be tested without a socket.
 
 from __future__ import annotations
 
-from . import cache, cot_view, fred_view, overview, price_view, smc_view
+from . import (cache, cot_view, fred_view, live_view, overview, price_view,
+               smc_view)
 
 DEFAULT_TTL_SECONDS = 120.0
 
@@ -47,6 +48,10 @@ class Dashboard:
         """Macro series with the chart window of the requested length."""
         return self._responses.get_or_build(
             ("macro", years), lambda: fred_view.payload(self.data_dir, years))
+
+    def live(self) -> dict:
+        """Published live buffers; never cached, they change every minute."""
+        return live_view.payload(self.data_dir)
 
     def refresh(self) -> None:
         """Drops both caches; the next request reads the files again."""

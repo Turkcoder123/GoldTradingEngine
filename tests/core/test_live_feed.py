@@ -93,6 +93,39 @@ def test_a_boundary_that_advances_prunes_the_covered_bars(
         BASE + 2 * MINUTE]
 
 
+def test_a_closed_bar_publishes_the_dashboard_snapshot(write_month, tmp_path):
+    from src.core import live_snapshot
+    _stored(write_month, tmp_path, "xauusd", 0)
+    session = _session(tmp_path, series=["xauusd"])
+    session._accept_tick(_tick(offset_seconds=90))
+    session._accept_tick(_tick(offset_seconds=150))
+    document = live_snapshot.read(live_snapshot.path(str(tmp_path)))
+    minutes = [bar["minute"] for bar in document["series"]["xauusd"]]
+    assert minutes == [timeutil.ts_to_text(BASE + MINUTE),
+                       timeutil.ts_to_text(BASE + 2 * MINUTE)]
+
+
+def test_publishing_can_be_disabled(write_month, tmp_path):
+    from src.core import live_snapshot
+    _stored(write_month, tmp_path, "xauusd", 0)
+    session = _session(tmp_path, series=["xauusd"], publish=False)
+    session._accept_tick(_tick(offset_seconds=90))
+    session._accept_tick(_tick(offset_seconds=150))
+    assert live_snapshot.read(live_snapshot.path(str(tmp_path))) == {}
+
+
+def test_a_failing_snapshot_is_reported_and_disabled(write_month, tmp_path):
+    reports = []
+    _stored(write_month, tmp_path, "xauusd", 0)
+    blocker = tmp_path / "blocker"
+    blocker.write_text("", encoding="utf-8")
+    session = _session(tmp_path, series=["xauusd"], report=reports.append,
+                       snapshot_path=str(blocker / "last.json"))
+    session._accept_tick(_tick(offset_seconds=90))
+    session._accept_tick(_tick(offset_seconds=150))
+    assert any("live snapshot" in text for text in reports)
+
+
 class _Fetch:
     """Records every poll and answers the rows it was built with."""
 

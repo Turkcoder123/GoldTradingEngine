@@ -29,6 +29,21 @@ version is tagged in git as `vX.Y.Z`.
 - `OPEN-6` records the approved `websocket-client` dependency: the live layer is
   its only user and it is imported lazily, so every other command and the whole
   test suite keep running with the standard library only.
+- The dashboard reads the live layer: `GET /api/live` serves the published
+  buffers, and the price chart merges the newest live minutes into one partial
+  day bar drawn hollow, dashed and amber with a `LIVE` badge, a gold last-price
+  line and a tooltip row. The page polls the endpoint every twenty seconds and
+  marks the overlay idle once the document is ten minutes old.
+- A sharper price chart: right-hand price axis, five day ticks on the time axis,
+  a dashed last-price line with a price tag, and a two-axis crosshair with a
+  price tag next to the hover tooltip.
+
+### Changed
+
+- The 1-minute keeper now refreshes its gap every five minutes instead of
+  fifteen (`--interval` still overrides it). The chart service serves bars about
+  a minute behind, so the shorter loop keeps the stored history closer to the
+  live overlay without the fifteen-fold traffic of a one-minute loop.
 
 ## [1.5.0] - 2026-11-09
 

@@ -92,13 +92,34 @@ a minute (`DXY_POLL_SECONDS`), and every returned bar enters the buffer:
 - Five minutes of history are fetched on the first poll, so a fresh start shows
   a short window instead of a single bar.
 
+## Dashboard overlay
+
+The web page cannot read another process's memory, so the session publishes its
+buffers as one small JSON document under `<data dir>/live/last.json`
+(`core/live_snapshot.py`). It is runtime state, not market history: rewritten
+when a bar closes, written atomically, and ignored by git with the rest of the
+data directory.
+
+The dashboard reads it through `GET /api/live` (`features/web/live_view.py`) and
+draws the newest live minutes of the selected series as a partial bar on the
+right of the daily chart: hollow, dashed, amber, with a `LIVE` badge above the
+chart and a gold last-price line. The page polls the endpoint every twenty
+seconds; the badge turns grey when the document is older than ten minutes, and
+the overlay disappears when it is missing.
+
+```sh
+python serve_dashboard.py         # reads the overlay when the stream is running
+python stream_live.py --no-snapshot   # run without publishing to the page
+python stream_live.py --snapshot /path/last.json
+```
+
 ## Data precedence and buffer rules
 
 - Dukascopy data is authoritative and persistent; live data is temporary and
   memory-only.
 - The boundary of each series is the newest minute its own CSV already holds. A
   tick or bar at or before that minute is refused, so live data can never
-  rewrite history.
+  rewrite history. The keeper refreshes that history every five minutes.
 - The boundary is refreshed before the ticks of a new minute (a tail read of a
   few kilobytes), and every live bar it now covers is dropped.
 - Bars are keyed by the UTC minute: open is the earliest tick of that minute,

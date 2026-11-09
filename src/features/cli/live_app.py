@@ -69,6 +69,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="stop after that many seconds (default: run until interrupted)")
     parser.add_argument("--json", action="store_true",
                         help="one JSON object per closed bar")
+    parser.add_argument(
+        "--snapshot", default=None,
+        help="where the dashboard overlay is published (default: "
+             "<data dir>/live/last.json)")
+    parser.add_argument(
+        "--no-snapshot", action="store_true",
+        help="do not publish the dashboard overlay")
     parser.add_argument("--quiet", action="store_true",
                         help="only print failures")
     parser.add_argument("--version", action="version",
@@ -116,7 +123,8 @@ def main(argv=None) -> int:
     try:
         session = live_feed.LiveSession(
             data_dir, args.series, args.side, args.buffer_minutes,
-            on_bar=lambda series_key, bar: _emit(series_key, bar, args))
+            on_bar=lambda series_key, bar: _emit(series_key, bar, args),
+            publish=not args.no_snapshot, snapshot_path=args.snapshot)
     except (live_client.LiveFeedError, ValueError) as exc:
         print(f" ! {exc}")
         return 1

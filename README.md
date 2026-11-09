@@ -81,7 +81,7 @@ Usage:
 
 ```sh
 python update_1m.py                        # fill the gap once
-python update_1m.py --loop                 # keep it current every 15 minutes
+python update_1m.py --loop                 # keep it current every 5 minutes
 python update_1m.py --status               # freshness report, no network
 python update_1m.py --since 2020-01-01     # bootstrap when there is no data
 python update_1m.py --data-dir /sdcard/gold
@@ -275,7 +275,11 @@ The layer needs the one approved third-party dependency
 (`python -m pip install websocket-client`, `OPEN-6`), imported lazily so every
 other command and the whole test suite stay standard library only. One SiftingIO
 socket carries both streamed symbols (free tier: 1 connection, 5 subscriptions).
-See `docs/live.md` for the protocol, the precedence rules and the limits.
+
+While the stream runs it publishes a small overlay document that the dashboard
+reads through `/api/live`: the selected series then shows the live minutes as a
+hollow amber partial bar with a `LIVE` badge, polled every twenty seconds. See
+`docs/live.md` for the protocol, the precedence rules and the limits.
 
 ## Documentation
 

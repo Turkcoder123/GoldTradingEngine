@@ -71,6 +71,9 @@ def make_handler(dashboard: Dashboard):
                 return self._send_cot(query)
             if path == "/api/macro":
                 return self._send_macro(query)
+            if path == "/api/live":
+                return self._send_json(
+                    payload.success("live", dashboard.live()))
             if path == "/api/refresh":
                 dashboard.refresh()
                 return self._send_json(

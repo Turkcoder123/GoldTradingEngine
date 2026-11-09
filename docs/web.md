@@ -44,7 +44,7 @@ address and lets the operator decide.
 | Section | Content |
 | ------- | ------- |
 | Overview | Totals (series, files, stored size, coverage, newest bar) and one card per price series: last close, day change, files, size, stored range |
-| Price history | Daily candlesticks with a volume strip for the selected series, 1M/3M/6M/1Y/All switch, window summary (open, high, low, close, change, bars, days, gaps, minutes without bars) |
+| Price history | Daily candlesticks with a volume strip for the selected series, 1M/3M/6M/1Y/All switch, window summary (open, high, low, close, change, bars, days, gaps, minutes without bars), and the live overlay of the running stream (`docs/live.md`) |
 | Smart money structures | Swings, BOS/CHoCH, liquidity sweeps, order blocks and fair value gaps of the same window, drawn over the candles (zones, dashed levels, markers) with a summary, four group toggles and the newest structures (`docs/smc.md`) |
 | COT positioning | Both stored reports side by side (net position, share of open interest, weekly change, open interest, long and short) and the weekly net as grouped bars |
 | Macro series | One sparkline card per FRED series (latest value, change, observation count) and a detail line chart for the selected series |
@@ -66,6 +66,7 @@ request cannot be built.
 | `GET /api/smc/<key>?months=N` | Detected SMC structures of the same window, each with the index of its bar, plus the pattern counts and the parameters used |
 | `GET /api/cot?year=YYYY` | Weekly net, open interest, long and short of both reports |
 | `GET /api/macro?years=N` | Stored FRED series with the last N years of observations |
+| `GET /api/live` | Live overlay: the newest published 1-minute bars per series, the age of the document and whether it is stale |
 | `GET /api/refresh` | Drops the in-process caches; the next request reads the files again |
 
 `months` is clamped to 24, `years` to 20, and an unknown series key answers 400.
@@ -91,6 +92,29 @@ request cannot be built.
 * The alternative sources read their stored CSVs (a few hundred kilobytes) and
   send only the windows the page draws: one year of ETF tonnage, two years of
   GVZ and the ten newest documents, so the payload stays around 20 KB.
+
+## Live overlay and the chart frame
+
+`GET /api/live` returns the buffers the live layer publishes
+(`docs/live.md`, `<data dir>/live/last.json`), and the price chart merges the
+newest live minutes of the selected series into one partial bar:
+
+* the partial bar is drawn hollow, dashed and amber, and its volume strip is
+  faded, so a live day never looks like a stored one;
+* the tooltip of that bar carries a `LIVE` row, and a pulsing badge above the
+  chart names the last live price, its minute and the number of buffered
+  minutes;
+* the badge turns grey (`live stream idle`) when the published document is
+  older than ten minutes, and disappears when there is none;
+* the page polls the endpoint every twenty seconds while the tab is visible, so
+  the overlay follows the stream without reloading the page.
+
+The chart itself is still hand-written SVG with no dependency: horizontal grid
+lines with a right-hand price axis, five day ticks on the time axis, a dashed
+last-price line with a price tag, and a two-axis crosshair (vertical guide on the
+bar, horizontal guide plus a price tag) that drives the hover tooltip. SMC
+zones and levels sit under the candles and above the grid, so the overlay never
+hides a structure's fill state.
 
 ## Limits worth knowing
 

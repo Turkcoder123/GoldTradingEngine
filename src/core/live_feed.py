@@ -15,7 +15,7 @@ import datetime as dt
 import time
 
 from ..shared import config, timeutil
-from . import csvfile, live_bar, live_client, live_params
+from . import csvfile, live_bar, live_client, live_params, live_snapshot
 from . import feed as feed_module
 
 
@@ -47,7 +47,8 @@ class LiveSession:
                  clock=time.monotonic, sleeper=time.sleep, report=print,
                  boundary_seconds: float = live_params.BOUNDARY_REFRESH_SECONDS,
                  dxy_seconds: float = live_params.DXY_POLL_SECONDS, fetch=None,
-                 now=timeutil.utc_now_minute):
+                 now=timeutil.utc_now_minute, publish: bool = True,
+                 snapshot_path: str = None):
         self.data_dir = data_dir
         self.series = _checked(series)
         self.side = side
@@ -63,6 +64,9 @@ class LiveSession:
         self._dxy_at = 0.0
         self._dxy_cursor = 0
         self._stopped = False
+        self._publishing = bool(publish)
+        self._snapshot_path = (snapshot_path if snapshot_path is not None
+                               else live_snapshot.path(data_dir))
         self.buffers = {
             key: live_bar.LiveBuffer(buffer_minutes,
                                      stored_through(data_dir, key, side))
@@ -111,7 +115,22 @@ class LiveSession:
         if previous is not None and current != previous:
             bar = buffer.get(previous)
             if bar is not None:
-                self.on_bar(tick.series, bar)
+                self._emit(tick.series, bar)
+
+    def _emit(self, series_key: str, bar: dict) -> None:
+        """Hands one closed bar to the caller and refreshes the dashboard copy."""
+        self.on_bar(series_key, bar)
+        self._publish()
+
+    def _publish(self) -> None:
+        """Writes the buffers for the dashboard; a failure disables it once."""
+        if not self._publishing:
+            return
+        try:
+            live_snapshot.write(self._snapshot_path, self.snapshot())
+        except OSError as exc:
+            self._publishing = False
+            self.report(f" ! live snapshot disabled: {exc}")
 
     def _poll_dxy(self, force: bool = False) -> int:
         """Polls the Dukascopy feed for new dollar index bars, throttled."""
@@ -141,7 +160,7 @@ class LiveSession:
                 self._dxy_cursor = max(self._dxy_cursor, int(row[0]))
                 bar = buffer.get(live_bar.minute_of(row[0]))
                 if bar is not None:
-                    self.on_bar(live_params.DXY_SERIES, bar)
+                    self._emit(live_params.DXY_SERIES, bar)
         return accepted
 
     def snapshot(self) -> dict:

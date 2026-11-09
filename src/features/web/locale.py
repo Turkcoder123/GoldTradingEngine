@@ -45,6 +45,10 @@ _EN = {
     "price.days": "Days",
     "price.empty": "No bars stored for this series",
     "price.note": "Daily bars aggregated from the stored 1-minute files; hover for one day.",
+    "price.live": "LIVE",
+    "price.live_updated": "updated",
+    "price.live_stale": "live stream idle",
+    "price.live_bars": "live bars",
 
     "card.files": "Files",
     "card.size": "Size",
