@@ -5,12 +5,12 @@ ordered bar window, and the dashboard draws them over the daily candlestick
 chart (`/api/smc/<key>?months=N`, `src/features/web/smc_view.py`).
 
 The rules and the event shapes are ported from the SMC pattern discovery system
-v0.1 (`smc_pattern_system_v0_1.zip`, `smc/detectors.py`). That reference read a
-CSV with pandas and wrote `smc_events.csv`; this project keeps the standard
-library only (`OPEN-2`, `CODE-6`), so the frame became the daily bar
-dictionaries that `features/web/price_view.py` already produces and the numpy
-comparisons became plain Python. The detection rules are unchanged, and the two
-implementations give the same events for the same bars.
+v0.1 reference implementation (`smc/detectors.py`). That reference read a CSV
+with pandas and wrote `smc_events.csv`; this project keeps the standard library
+only (`OPEN-2`, `CODE-6`), so the frame became the daily bar dictionaries that
+`features/web/price_view.py` already produces and the numpy comparisons became
+plain Python. The detection rules are unchanged, and the two implementations
+give the same events for the same bars.
 
 ## Detected structures
 
