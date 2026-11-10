@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from ...shared import timeutil
-from . import fred_view, locale, page, payload
+from . import fred_view, intervals, locale, page, payload
 from .dashboard import Dashboard
 
 DEFAULT_MONTHS = 3
@@ -82,10 +82,22 @@ def make_handler(dashboard: Dashboard):
                 payload.failure("unknown", locale.text("error.not_found")), 404)
 
         def _send_series(self, key: str, query: dict) -> None:
-            """Daily bars of one series; an unknown key is a client error."""
-            months = _int_param(query, "months", DEFAULT_MONTHS, 0, MAX_MONTHS)
+            """OHLC bars of one series and timeframe; bad input is a 400."""
+            # An explicit `days` (0 means everything) owns the window, so the
+            # months default must not narrow it back to three files.
+            months_default = 0 if "days" in query else DEFAULT_MONTHS
+            months = _int_param(query, "months", months_default, 0, MAX_MONTHS)
+            days = _int_param(query, "days", 0, 0, intervals.MAX_DAYS)
+            interval = (query.get("interval") or [intervals.DEFAULT])[0].lower()
             try:
-                body = dashboard.series(key.lower(), months)
+                intervals.minutes(interval)
+            except ValueError as exc:
+                return self._send_json(
+                    payload.failure(
+                        "series",
+                        f"{locale.text('error.bad_interval')}: {exc}"), 400)
+            try:
+                body = dashboard.series(key.lower(), months, days, interval)
             except ValueError as exc:
                 return self._send_json(
                     payload.failure(

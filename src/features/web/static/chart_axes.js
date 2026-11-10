@@ -16,7 +16,10 @@ const ChartAxes = (function () {
     });
   }
 
-  function timeAxis(svg, bars, plot, band) {
+  function timeAxis(svg, bars, plot, band, labelFor) {
+    const label = labelFor || function (bar) {
+      return ChartCore.fmtDay(bar.day);
+    };
     const step = Math.max(1, Math.ceil(bars.length / 6));
     bars.forEach(function (bar, index) {
       if (index % step !== 0 && index !== bars.length - 1) {
@@ -27,7 +30,7 @@ const ChartAxes = (function () {
         x1: center, x2: center, y1: plot.bottom, y2: plot.bottom + 4,
         class: "chart-tick"
       }));
-      ChartCore.text(svg, center, plot.bottom + 17, ChartCore.fmtDay(bar.day),
+      ChartCore.text(svg, center, plot.bottom + 17, label(bar),
                      {className: "chart-label axis"});
     });
   }

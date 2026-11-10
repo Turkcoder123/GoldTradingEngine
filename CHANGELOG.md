@@ -37,6 +37,12 @@ version is tagged in git as `vX.Y.Z`.
 - A sharper price chart: right-hand price axis, five day ticks on the time axis,
   a dashed last-price line with a price tag, and a two-axis crosshair with a
   price tag next to the hover tooltip.
+- Timeframe and range controls above the chart: `1m, 5m, 15m, 30m, 1h, 4h, 1D`
+  crossed with `1D, 1W, 1M, 3M, 1Y, All`. The chart opens on `1D` and `All`, so
+  every stored bar is visible, and `/api/series` now accepts `interval` and
+  `days` (with `bars_total` and `truncated` so the page can say when a window
+  had to be cut). The chart panel also moved to the top of the page, directly
+  under the header.
 
 ### Changed
 

@@ -11,10 +11,12 @@ const DashboardLayout = (function () {
       kpis: document.getElementById("kpi-strip"),
       grid: document.getElementById("series-grid"),
       seriesChips: document.getElementById("series-chips"),
+      intervalChips: document.getElementById("interval-chips"),
       rangeChips: document.getElementById("range-chips"),
       priceSummary: document.getElementById("price-summary"),
       priceChart: document.getElementById("price-chart"),
       priceLive: document.getElementById("price-live"),
+      priceWindow: document.getElementById("price-window"),
       smc: {
         title: document.getElementById("smc-title"),
         note: document.getElementById("smc-note"),

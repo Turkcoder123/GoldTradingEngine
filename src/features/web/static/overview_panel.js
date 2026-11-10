@@ -2,10 +2,6 @@
 "use strict";
 
 const DashboardOverviewPanel = (function () {
-  const RANGES = [[1, "price.range.1m"], [3, "price.range.3m"],
-                  [6, "price.range.6m"], [13, "price.range.1y"],
-                  [0, "price.range.all"]];
-
   function chip(caption, active, onClick) {
     const button = DomKit.element("button", "chip" + (active ? " active" : ""),
                                   caption);
@@ -92,13 +88,6 @@ const DashboardOverviewPanel = (function () {
       panel.seriesChips.appendChild(chip(
         card.instrument, card.key === options.selectedKey, function () {
           options.onSelectSeries(card.key);
-        }));
-    });
-    panel.rangeChips.innerHTML = "";
-    RANGES.forEach(function (entry) {
-      panel.rangeChips.appendChild(chip(
-        labels[entry[1]], entry[0] === options.months, function () {
-          options.onSelectRange(entry[0]);
         }));
     });
   }

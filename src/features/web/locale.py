@@ -20,7 +20,7 @@ _EN = {
     "app.read_only": "Read-only view of the CSV files; nothing is downloaded.",
 
     "section.overview": "Overview",
-    "section.prices": "Price history",
+    "section.prices": "Price chart",
 
     "kpi.series": "Price series",
     "kpi.files": "CSV files",
@@ -44,11 +44,15 @@ _EN = {
     "price.bars": "Bars",
     "price.days": "Days",
     "price.empty": "No bars stored for this series",
-    "price.note": "Daily bars aggregated from the stored 1-minute files; hover for one day.",
+    "price.note": "Bars aggregated from the stored 1-minute files; pick a timeframe above and hover for one bar.",
     "price.live": "LIVE",
     "price.live_updated": "updated",
     "price.live_stale": "live stream idle",
     "price.live_bars": "live bars",
+    "price.interval": "Timeframe",
+    "price.range": "Range",
+    "price.window": "Window",
+    "price.truncated": "window cut to the newest bars",
 
     "card.files": "Files",
     "card.size": "Size",
@@ -145,6 +149,7 @@ _EN = {
 
     "error.not_found": "Not found",
     "error.bad_series": "Unknown price series",
+    "error.bad_interval": "Unknown timeframe",
     "error.build": "The dashboard could not build this section",
 }
 

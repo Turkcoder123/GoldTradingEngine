@@ -44,7 +44,7 @@ address and lets the operator decide.
 | Section | Content |
 | ------- | ------- |
 | Overview | Totals (series, files, stored size, coverage, newest bar) and one card per price series: last close, day change, files, size, stored range |
-| Price history | Daily candlesticks with a volume strip for the selected series, 1M/3M/6M/1Y/All switch, window summary (open, high, low, close, change, bars, days, gaps, minutes without bars), and the live overlay of the running stream (`docs/live.md`) |
+| Price history | Price chart with a **timeframe row** (1m, 5m, 15m, 30m, 1h, 4h, 1D) and a **range row** (1D, 1W, 1M, 3M, 1Y, All; **All is the default**, so the chart opens on every stored bar), candlesticks with a volume strip, the window summary (open, high, low, close, change, bars, gaps, minutes without bars) and the live overlay of the running stream (`docs/live.md`) |
 | Smart money structures | Swings, BOS/CHoCH, liquidity sweeps, order blocks and fair value gaps of the same window, drawn over the candles (zones, dashed levels, markers) with a summary, four group toggles and the newest structures (`docs/smc.md`) |
 | COT positioning | Both stored reports side by side (net position, share of open interest, weekly change, open interest, long and short) and the weekly net as grouped bars |
 | Macro series | One sparkline card per FRED series (latest value, change, observation count) and a detail line chart for the selected series |
@@ -62,14 +62,40 @@ request cannot be built.
 | Endpoint | Data |
 | -------- | ---- |
 | `GET /api/overview` | Series cards, totals, COT summaries, macro summaries and the alternative sources (ETF tonnage windows, GVZ, newest documents) |
-| `GET /api/series/<key>?months=N` | Daily bars of one series (`xauusd`, `dxy`, ...), `months=0` means the whole history |
+| `GET /api/series/<key>?interval=I&days=N` | OHLC bars of one series: timeframe `I` (1m, 5m, 15m, 30m, 1h, 4h, 1d) and the newest `N` days (`0` means everything stored; the legacy `months=N` still works) |
 | `GET /api/smc/<key>?months=N` | Detected SMC structures of the same window, each with the index of its bar, plus the pattern counts and the parameters used |
 | `GET /api/cot?year=YYYY` | Weekly net, open interest, long and short of both reports |
 | `GET /api/macro?years=N` | Stored FRED series with the last N years of observations |
 | `GET /api/live` | Live overlay: the newest published 1-minute bars per series, the age of the document and whether it is stale |
 | `GET /api/refresh` | Drops the in-process caches; the next request reads the files again |
 
-`months` is clamped to 24, `years` to 20, and an unknown series key answers 400.
+`months` is clamped to 24, `days` to 3650, `years` to 20, and an unknown series
+key or timeframe answers 400.
+
+## Timeframes and windows
+
+The chart reads the same stored 1-minute files at six intraday resolutions plus
+the daily one, so nothing is re-downloaded and nothing is persisted twice:
+
+| Timeframe | Bars per response (cap) | Typical window with All |
+| --------- | ----------------------- | ----------------------- |
+| `1m` | 1,500 | the newest 25 hours |
+| `5m` / `15m` / `30m` | 1,500 | between five days and a month |
+| `1h` | 2,000 | about two and a half months |
+| `4h` | 2,000 | the whole stored year |
+| `1d` | 3,000 | the whole stored history |
+
+* The page opens on **1D + All**, so the first chart shows every stored bar
+  (a year of history becomes about 315 candles).
+* A response never exceeds the cap of its timeframe; the body carries
+  `bars_total` and `truncated`, and the line under the chart says when the
+  window had to be cut (`window cut to the newest bars`).
+* Only the monthly files that can hold the requested span are read, so a `1m`
+  chart does not re-aggregate the whole year.
+* The time axis prints the time of day for intraday bars and the date for daily
+  bars; the live overlay merges into the bucket of the selected timeframe.
+* The SMC overlay is a daily structure set, so it is drawn only on the `1d`
+  timeframe and left out of the intraday views.
 
 ## How the numbers are built
 

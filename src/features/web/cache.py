@@ -51,13 +51,13 @@ class DailyCache:
         self._capacity = int(capacity)
         self._items = {}
 
-    def file_aggregate(self, path: str) -> dict:
-        """Daily bars and gap counts of one monthly CSV, once per file version."""
+    def file_aggregate(self, path: str, interval: str = "1d") -> dict:
+        """Bars and gap counts of one monthly CSV, once per file and interval."""
         stat = os.stat(path)
-        key = (path, stat.st_size, stat.st_mtime_ns)
+        key = (path, interval, stat.st_size, stat.st_mtime_ns)
         entry = self._items.pop(key, None)
         if entry is None:
-            entry = price_view.aggregate_file(path)
+            entry = price_view.aggregate_file(path, interval)
             while len(self._items) >= self._capacity:
                 self._items.pop(next(iter(self._items)))
         self._items[key] = entry

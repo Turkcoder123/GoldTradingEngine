@@ -23,26 +23,30 @@
   </header>
   <p id="status-line" class="status-line" role="status" hidden></p>
 
-  <section class="panel" id="overview-panel">
-    <div class="panel-head">
-      <h2 id="overview-title"></h2>
-    </div>
-    <div id="kpi-strip" class="kv-strip"></div>
-    <div id="series-grid" class="card-grid"></div>
-  </section>
-
   <section class="panel" id="price-panel">
     <div class="panel-head">
       <h2 id="price-title"></h2>
       <div class="toolbar">
         <p id="price-live" class="live-badge" hidden></p>
         <div id="series-chips" class="chips"></div>
-        <div id="range-chips" class="chips"></div>
       </div>
+    </div>
+    <div class="toolbar chart-toolbar">
+      <div id="interval-chips" class="chips"></div>
+      <div id="range-chips" class="chips"></div>
     </div>
     <div id="price-summary" class="kv-strip"></div>
     <div id="price-chart" class="chart"></div>
+    <p id="price-window" class="muted small note"></p>
     <p id="price-note" class="muted small note"></p>
+  </section>
+
+  <section class="panel" id="overview-panel">
+    <div class="panel-head">
+      <h2 id="overview-title"></h2>
+    </div>
+    <div id="kpi-strip" class="kv-strip"></div>
+    <div id="series-grid" class="card-grid"></div>
   </section>
 
   <section class="panel" id="smc-panel">
@@ -111,6 +115,7 @@
 <script src="/static/chart_candle.js"></script>
 <script src="/static/chart_smc.js"></script>
 <script src="/static/sparkline.js"></script>
+<script src="/static/chart_controls.js"></script>
 <script src="/static/dom.js"></script>
 <script src="/static/overview_panel.js"></script>
 <script src="/static/price_panel.js"></script>

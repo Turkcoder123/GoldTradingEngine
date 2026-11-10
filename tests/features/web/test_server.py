@@ -87,6 +87,45 @@ def test_series_endpoint_serves_the_daily_bars(base_url, tmp_path,
     assert body["data"]["summary"]["last_close"] == 11.9
 
 
+def test_the_series_endpoint_serves_a_timeframe(base_url, tmp_path,
+                                                write_month):
+    rows = [("2026-11-09 08:05:00", 10, 10, 10, 10, 1),
+            ("2026-11-09 08:59:00", 10, 12, 10, 12, 1),
+            ("2026-11-09 09:01:00", 12, 13, 12, 13, 1)]
+    write_month(tmp_path, "xauusd_1m_2026-11.csv", rows)
+    body = get_json(base_url + "/api/series/xauusd?interval=1h")
+    assert body["data"]["interval"] == "1h"
+    assert [bar["time"] for bar in body["data"]["bars"]] == [
+        "2026-11-09 08:00", "2026-11-09 09:00"]
+
+
+def test_the_series_endpoint_limits_the_window_by_days(base_url, tmp_path,
+                                                       write_month):
+    rows = [("2026-11-01 08:00:00", 1, 1, 1, 1, 1),
+            ("2026-11-09 08:00:00", 2, 2, 2, 2, 1)]
+    write_month(tmp_path, "xauusd_1m_2026-11.csv", rows)
+    body = get_json(base_url + "/api/series/xauusd?interval=1d&days=3")
+    assert body["data"]["days_requested"] == 3
+    assert [bar["time"] for bar in body["data"]["bars"]] == ["2026-11-09"]
+
+
+def test_an_unknown_timeframe_is_a_client_error(base_url):
+    body = get_json(base_url + "/api/series/xauusd?interval=2h", expect=400)
+    assert body["ok"] is False
+    assert "2h" in body["error"]
+
+
+def test_all_days_also_means_every_stored_month(base_url, tmp_path,
+                                                write_month):
+    rows = [("2026-09-01 08:00:00", 1, 1, 1, 1, 1),
+            ("2026-11-09 08:00:00", 2, 2, 2, 2, 1)]
+    for month in ("2026-09", "2026-10", "2026-11"):
+        write_month(tmp_path, "xauusd_1m_%s.csv" % month, rows)
+    body = get_json(base_url + "/api/series/xauusd?interval=1d&days=0")
+    assert body["data"]["months_requested"] == 0
+    assert body["data"]["months"] == ["2026-09", "2026-10", "2026-11"]
+
+
 def test_an_unknown_series_is_a_client_error(base_url):
     body = get_json(base_url + "/api/series/nope", expect=400)
     assert body["ok"] is False

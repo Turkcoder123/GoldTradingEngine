@@ -14,6 +14,7 @@ import os
 from ...core import csvfile
 from ...core.quotes import PRICE_DIGITS, numbers
 from ...shared import config
+from . import intervals
 
 
 def _minute_index(text: str) -> int:
@@ -30,15 +31,15 @@ def _minute_index(text: str) -> int:
         return 0
 
 
-def aggregate_file(path: str) -> dict:
-    """Daily OHLC bars plus the minute-gap statistics of one monthly CSV.
+def aggregate_file(path: str, interval: str = intervals.DEFAULT) -> dict:
+    """OHLC bars of one monthly CSV at one timeframe, plus the gap statistics.
 
-    A bar holds the first open and the last close of the day, the highest high,
-    the lowest low, the summed volume and the number of stored minutes. The gap
-    numbers use the same rules as `update_1m.py --status`, including market
-    closures, so they stay comparable with the CLI report.
+    A bar holds the first open and the last close of its bucket, the highest
+    high, the lowest low, the summed volume and the number of stored minutes.
+    The gap numbers use the same rules as `update_1m.py --status`, including
+    market closures, so they stay comparable with the CLI report.
     """
-    days = {}
+    bars = {}
     gaps = missing = largest = 0
     previous = 0
     with open(path, "r", encoding=config.ENCODING, newline="") as handle:
@@ -50,10 +51,11 @@ def aggregate_file(path: str) -> dict:
             values = numbers(parts)
             if values is None:
                 continue
-            day = parts[0][:10]
-            bar = days.get(day)
+            key, text, day = intervals.bucket(parts[0], interval)
+            bar = bars.get(key)
             if bar is None:
-                days[day] = {
+                bars[key] = {
+                    "time": text,
                     "day": day,
                     "open": round(values[0], PRICE_DIGITS),
                     "high": round(values[1], PRICE_DIGITS),
@@ -80,7 +82,7 @@ def aggregate_file(path: str) -> dict:
             if minute:
                 previous = minute
     return {
-        "bars": [days[day] for day in sorted(days)],
+        "bars": [bars[key] for key in sorted(bars)],
         "gaps": gaps,
         "missing_minutes": missing,
         "largest_gap_minutes": largest,
@@ -141,20 +143,56 @@ def summarize(bars: list) -> dict:
     }
 
 
-def payload(loader, data_dir: str, key: str, months: int) -> dict:
-    """One price series as daily bars plus the summary of the window.
+_MINUTES_PER_MONTH = 30 * 24 * 60
 
-    `loader` turns one file path into its aggregate (the cache in `cache.py`).
+
+def _months_for(months: int, days: int, interval: str) -> int:
+    """How many monthly files a request needs; 0 means every stored month.
+
+    An intraday request never needs the whole archive: its bar cap already
+    limits the span, so only the months that can hold those bars are read.
+    """
+    if days > 0:
+        return min(24, max(1, int(days) // 30 + 2))
+    if months > 0:
+        return months
+    size = intervals.minutes(interval)
+    if not size:
+        return 0
+    span = intervals.limit(interval) * size
+    return min(24, max(1, span // _MINUTES_PER_MONTH + 1))
+
+
+def payload(loader, data_dir: str, key: str, months: int = 0, days: int = 0,
+            interval: str = intervals.DEFAULT) -> dict:
+    """One price series at one timeframe, plus the summary of the window.
+
+    `days` limits the window from the newest bar (0 means everything stored) and
+    the timeframe decides how stored minutes become bars. A response never
+    carries more bars than the cap of its timeframe; `truncated` says when the
+    window had to be cut, so the page can tell the truth about it.
     """
     series = config.resolve_series(key)
-    paths = month_paths(data_dir, series.prefix, months)
-    bars, quality = combine([loader(path) for path in paths])
+    intervals.minutes(interval)                      # validates the name
+    paths = month_paths(data_dir, series.prefix,
+                        _months_for(months, days, interval))
+    bars, quality = combine([loader(path, interval) for path in paths])
+    bars = intervals.cutoff(bars, days)
+    total = len(bars)
+    cap = intervals.limit(interval)
+    truncated = total > cap
+    if truncated:
+        bars = bars[-cap:]
     return {
         "key": series.key,
         "instrument": series.instrument,
         "side": config.DEFAULT_SIDE,
+        "interval": interval,
         "months_requested": months,
+        "days_requested": days,
         "months": month_keys(paths),
+        "bars_total": total,
+        "truncated": truncated,
         "bars": bars,
         "quality": quality,
         "summary": summarize(bars),

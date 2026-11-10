@@ -25,12 +25,14 @@ class Dashboard:
         return self._responses.get_or_build(
             "overview", lambda: overview.payload(self.data_dir))
 
-    def series(self, key: str, months: int) -> dict:
-        """Daily bars of one price series for the requested window."""
+    def series(self, key: str, months: int, days: int = 0,
+               interval: str = "1d") -> dict:
+        """OHLC bars of one price series at the requested timeframe and window."""
         return self._responses.get_or_build(
-            ("series", key, months),
+            ("series", key, months, days, interval),
             lambda: price_view.payload(self._files.file_aggregate,
-                                       self.data_dir, key, months))
+                                       self.data_dir, key, months, days,
+                                       interval))
 
     def cot(self, year) -> dict:
         """Stored COT reports of one year (None: the newest stored year)."""

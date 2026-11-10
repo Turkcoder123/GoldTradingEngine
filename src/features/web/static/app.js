@@ -10,7 +10,8 @@ const DashboardApp = (function () {
   const state = {
     overview: null,
     seriesKey: "xauusd",
-    months: 3,
+    interval: "1d",
+    days: 0,
     price: null,
     smc: null,
     live: null,
@@ -43,7 +44,6 @@ const DashboardApp = (function () {
     }
     DashboardOverviewPanel.render(PANELS, state.overview, LABELS, {
       selectedKey: state.seriesKey,
-      months: state.months,
       onSelectSeries: function (key) {
         state.seriesKey = key;
         state.smc = null;
@@ -52,23 +52,32 @@ const DashboardApp = (function () {
         loadSmc();
         document.getElementById("price-panel")
           .scrollIntoView({behavior: "smooth", block: "start"});
-      },
-      onSelectRange: function (months) {
-        state.months = months;
-        state.smc = null;
-        renderOverview();
-        loadPrice();
-        loadSmc();
       }
     });
     DashboardLayout.renderFooter(state.overview);
+  }
+
+  function renderControls() {
+    ChartControls.render(PANELS, state, LABELS, {
+      onInterval: function (interval) {
+        state.interval = interval;
+        renderControls();
+        loadPrice();
+      },
+      onRange: function (days) {
+        state.days = days;
+        renderControls();
+        loadPrice();
+      }
+    });
   }
 
   function renderPrice() {
     if (!state.price) {
       return;
     }
-    DashboardPricePanel.render(PANELS, state.price, LABELS, overlays(),
+    const overlay = state.interval === "1d" ? overlays() : null;
+    DashboardPricePanel.render(PANELS, state.price, LABELS, overlay,
                                state.live);
   }
 
@@ -86,7 +95,8 @@ const DashboardApp = (function () {
   async function loadPrice() {
     try {
       state.price = await request("/api/series/" +
-        encodeURIComponent(state.seriesKey) + "?months=" + state.months);
+        encodeURIComponent(state.seriesKey) + "?interval=" +
+        encodeURIComponent(state.interval) + "&days=" + state.days);
       renderPrice();
     } catch (error) {
       status(label("app.failed") + ": " + error.message, "error");
@@ -142,6 +152,7 @@ const DashboardApp = (function () {
       return;
     }
     renderOverview();
+    renderControls();
     renderAlt();
     status("");
     loadPrice();

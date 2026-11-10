@@ -55,7 +55,7 @@ const ChartCandle = (function () {
 
   function tipContent(bar, labels) {
     const rows = [
-      "<b>" + bar.day + "</b>",
+      "<b>" + (bar.time || bar.day) + "</b>",
       ChartCore.row(labels.open, ChartCore.fmtValue(bar.open)),
       ChartCore.row(labels.high, ChartCore.fmtValue(bar.high)),
       ChartCore.row(labels.low, ChartCore.fmtValue(bar.low)),
@@ -106,7 +106,7 @@ const ChartCandle = (function () {
   function draw(svg, container, bars, labels, overlays, width) {
     const frame = frameFor(bars, width);
     ChartAxes.priceGrid(svg, frame.plot, frame.yPrice, frame.min, frame.max);
-    ChartAxes.timeAxis(svg, bars, frame.plot, frame.band);
+    ChartAxes.timeAxis(svg, bars, frame.plot, frame.band, labels.axisLabel);
     const last = bars[bars.length - 1];
     ChartAxes.lastPrice(svg, frame.plot, frame.yPrice, last.close,
                         last.live ? LIVE : colourOf(last));
