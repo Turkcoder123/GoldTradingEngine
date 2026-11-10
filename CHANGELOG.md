@@ -9,6 +9,10 @@ version is tagged in git as `vX.Y.Z`.
 
 ## [Unreleased]
 
+No unreleased changes.
+
+## [1.6.2] - 2026-11-10
+
 ### Added
 
 - `stream_live.py` plus `src/core/live_*.py`: a temporary live layer for
