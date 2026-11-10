@@ -12,6 +12,7 @@ const DashboardApp = (function () {
     seriesKey: "xauusd",
     interval: "1d",
     days: 0,
+    chart: {volume: true, lastPrice: true, ema20: false, ema50: false},
     price: null,
     smc: null,
     live: null,
@@ -68,8 +69,34 @@ const DashboardApp = (function () {
         state.days = days;
         renderControls();
         loadPrice();
+      },
+      onZoomIn: function () {
+        ChartCandle.zoomIn(PANELS.priceChart);
+      },
+      onZoomOut: function () {
+        ChartCandle.zoomOut(PANELS.priceChart);
+      },
+      onReset: function () {
+        ChartCandle.reset(PANELS.priceChart);
       }
     });
+  }
+
+  function renderIndicators() {
+    DashboardIndicatorPanel.render(
+      PANELS.indicators, LABELS, state.chart, state.groups, {
+        onStudy: function (name) {
+          state.chart[name] = !state.chart[name];
+          renderIndicators();
+          renderPrice();
+        },
+        onGroup: function (name) {
+          state.groups[name] = !state.groups[name];
+          renderIndicators();
+          renderSmc();
+          renderPrice();
+        }
+      });
   }
 
   function renderPrice() {
@@ -78,7 +105,7 @@ const DashboardApp = (function () {
     }
     const overlay = state.interval === "1d" ? overlays() : null;
     DashboardPricePanel.render(PANELS, state.price, LABELS, overlay,
-                               state.live);
+                               state.live, state.chart);
   }
 
   function renderSmc() {
@@ -153,6 +180,7 @@ const DashboardApp = (function () {
     }
     renderOverview();
     renderControls();
+    renderIndicators();
     renderAlt();
     status("");
     loadPrice();
@@ -168,6 +196,7 @@ const DashboardApp = (function () {
       await request("/api/refresh");
       state.overview = await request("/api/overview");
       renderOverview();
+      renderIndicators();
       renderAlt();
       await Promise.all([loadPrice(), loadLive(), loadSmc(), loadCot(),
                          loadMacro()]);

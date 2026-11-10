@@ -53,6 +53,16 @@ _EN = {
     "price.range": "Range",
     "price.window": "Window",
     "price.truncated": "window cut to the newest bars",
+    "price.last_price": "Last price",
+    "price.zoom_in": "Zoom in",
+    "price.zoom_out": "Zoom out",
+    "price.zoom_reset": "Reset",
+    "price.hint": "Drag to pan, wheel or pinch to zoom, double-click to reset.",
+
+    "section.indicators": "Indicators",
+    "indicators.note": "Studies drawn over the chart; the SMC groups are daily structures.",
+    "indicator.ema20": "EMA 20",
+    "indicator.ema50": "EMA 50",
 
     "card.files": "Files",
     "card.size": "Size",

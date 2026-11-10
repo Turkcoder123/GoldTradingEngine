@@ -142,6 +142,33 @@ bar, horizontal guide plus a price tag) that drives the hover tooltip. SMC
 zones and levels sit under the candles and above the grid, so the overlay never
 hides a structure's fill state.
 
+The chart is fully interactive, still with no dependency:
+
+* **wheel** zooms around the cursor, **pinch** zooms on touch screens, the two
+  zoom chips (`−` / `+`) zoom around the centre and `Reset` (or a double click)
+  returns to every bar in the window;
+* **drag** pans the viewport; the view keeps at least twelve bars and never
+  leaves the loaded window, so a pan simply reveals older or newer candles;
+* the vertical scale, the axes, the crosshair and the studies are recomputed for
+  the visible slice only, and a redraw is coalesced into one animation frame;
+* the viewport survives a live refresh: an appended live bar keeps the zoom, and
+  a new timeframe or range resets it.
+
+## Indicators
+
+The panel under the chart toggles the studies drawn over it:
+
+| Chip | What it draws |
+| ---- | ------------- |
+| `Volume` | the volume strip under the candles |
+| `Last price` | the dashed last-price line and its price tag |
+| `EMA 20` / `EMA 50` | exponential moving averages of the close, computed in the browser |
+| `Structure`, `Zones`, `Sweeps`, `Swings` | the SMC groups of `docs/smc.md` (daily timeframe only) |
+
+The SMC chips are the same switches as the ones in the SMC panel, so both stay
+in step. The EMAs are calculated over the whole loaded window and then sliced to
+the visible bars, so a zoom never restarts the average at the left edge.
+
 ## Limits worth knowing
 
 * Read-only: the dashboard cannot start an update. Use `update_1m.py`,

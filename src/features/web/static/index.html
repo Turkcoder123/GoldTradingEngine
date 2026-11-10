@@ -34,11 +34,21 @@
     <div class="toolbar chart-toolbar">
       <div id="interval-chips" class="chips"></div>
       <div id="range-chips" class="chips"></div>
+      <div id="zoom-chips" class="chips"></div>
     </div>
     <div id="price-summary" class="kv-strip"></div>
     <div id="price-chart" class="chart"></div>
+    <p id="price-hint" class="muted small note"></p>
     <p id="price-window" class="muted small note"></p>
     <p id="price-note" class="muted small note"></p>
+  </section>
+
+  <section class="panel" id="indicators-panel">
+    <div class="panel-head">
+      <h2 id="indicators-title"></h2>
+      <p id="indicators-note" class="muted small"></p>
+    </div>
+    <div id="indicator-chips" class="chips"></div>
   </section>
 
   <section class="panel" id="overview-panel">
@@ -109,7 +119,12 @@
 </div>
 <script type="application/json" id="dashboard-config">{{LABELS}}</script>
 <script src="/static/chart_core.js"></script>
+<script src="/static/chart_view.js"></script>
 <script src="/static/chart_axes.js"></script>
+<script src="/static/chart_series.js"></script>
+<script src="/static/chart_gestures.js"></script>
+<script src="/static/indicators.js"></script>
+<script src="/static/chart_controls.js"></script>
 <script src="/static/chart_line.js"></script>
 <script src="/static/chart_bars.js"></script>
 <script src="/static/chart_candle.js"></script>
@@ -119,6 +134,7 @@
 <script src="/static/dom.js"></script>
 <script src="/static/overview_panel.js"></script>
 <script src="/static/price_panel.js"></script>
+<script src="/static/indicator_panel.js"></script>
 <script src="/static/smc_panel.js"></script>
 <script src="/static/cot_panel.js"></script>
 <script src="/static/macro_panel.js"></script>

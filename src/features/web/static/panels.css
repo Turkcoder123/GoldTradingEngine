@@ -78,7 +78,8 @@
 .chart-crosshair-set { pointer-events: none; }
 .chart-tag-bg { fill: #0b0f16; stroke: var(--line); stroke-width: 1; }
 .chart-lastline { stroke-width: 1; stroke-dasharray: 5 4; opacity: 0.9; }
-.chart-overlay { cursor: crosshair; }
+.chart-overlay { cursor: grab; touch-action: none; user-select: none; }
+.chart-overlay:active { cursor: grabbing; }
 
 .candle-wick { stroke-width: 1; }
 .candle-body { stroke: none; }

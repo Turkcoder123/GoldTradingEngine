@@ -131,14 +131,14 @@ const DashboardPricePanel = (function () {
     node.textContent = parts.join(" · ");
   }
 
-  function render(panel, data, labels, overlays, live) {
+  function render(panel, data, labels, overlays, live, options) {
     DomKit.keyValueStrip(panel.priceSummary, summaryRows(data, labels));
     renderWindow(panel.priceWindow, data, labels);
     const minutes = liveMinutes(live, data.key);
     renderLive(panel.priceLive, live, minutes, labels);
     ChartCandle.render(panel.priceChart,
                        mergeLive(data.bars, minutes, data.interval),
-                       chartLabels(labels), overlays);
+                       chartLabels(labels), overlays, options || {});
   }
 
   return {render: render};

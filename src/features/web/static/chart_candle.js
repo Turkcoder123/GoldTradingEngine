@@ -1,4 +1,4 @@
-/* Candlestick chart: price grid, live overlay, volume strip, crosshair tip. */
+/* Candlestick chart: viewport, frame, studies, and the gesture wiring. */
 "use strict";
 
 const ChartCandle = (function () {
@@ -6,76 +6,18 @@ const ChartCandle = (function () {
   const VOLUME_HEIGHT = 52;
   const VOLUME_GAP = 18;
   const HEIGHT = 360;
-  const UP = "#3fb950";
-  const DOWN = "#f85149";
-  const LIVE = "#e3b341";
+  const EMA_FAST = "#58a6ff";
+  const EMA_SLOW = "#f778ba";
+  const states = new WeakMap();
 
-  function colourOf(bar) {
-    return bar.close >= bar.open ? UP : DOWN;
-  }
-
-  function drawWick(svg, bar, center, yPrice) {
-    svg.appendChild(ChartCore.el("line", {
-      x1: center, x2: center, y1: yPrice(bar.high), y2: yPrice(bar.low),
-      stroke: bar.live ? LIVE : colourOf(bar),
-      class: bar.live ? "candle-wick live" : "candle-wick"
-    }));
-  }
-
-  function drawBody(svg, bar, center, bodyWidth, yPrice) {
-    const top = Math.min(yPrice(bar.open), yPrice(bar.close));
-    const height = Math.max(1.5, Math.abs(yPrice(bar.close) - yPrice(bar.open)));
-    const attrs = {
-      x: center - bodyWidth / 2,
-      y: top,
-      width: bodyWidth,
-      height: height,
-      class: bar.live ? "candle-body live" : "candle-body"
-    };
-    if (bar.live) {
-      attrs.stroke = LIVE;
-    } else {
-      attrs.fill = colourOf(bar);
-    }
-    svg.appendChild(ChartCore.el("rect", attrs));
-  }
-
-  function drawVolume(svg, bar, center, bodyWidth, yVolume, volumeBottom) {
-    if (!bar.volume) {
-      return;
-    }
-    const top = yVolume(bar.volume);
-    svg.appendChild(ChartCore.el("rect", {
-      x: center - bodyWidth / 2, y: top, width: bodyWidth,
-      height: Math.max(0, volumeBottom - top),
-      fill: bar.live ? LIVE : colourOf(bar),
-      class: bar.live ? "candle-volume live" : "candle-volume"
-    }));
-  }
-
-  function tipContent(bar, labels) {
-    const rows = [
-      "<b>" + (bar.time || bar.day) + "</b>",
-      ChartCore.row(labels.open, ChartCore.fmtValue(bar.open)),
-      ChartCore.row(labels.high, ChartCore.fmtValue(bar.high)),
-      ChartCore.row(labels.low, ChartCore.fmtValue(bar.low)),
-      ChartCore.row(labels.close, ChartCore.fmtValue(bar.close)),
-      ChartCore.row(labels.volume, ChartCore.fmtValue(bar.volume, 2)),
-      ChartCore.row(labels.bars, ChartCore.fmtValue(bar.count, 0))
-    ];
-    if (bar.live) {
-      rows.push('<div class="tip-row live"><span>' + labels.live +
-                "</span><b>" + labels.live + "</b></div>");
-    }
-    return rows.join("");
-  }
-
-  function frameFor(bars, width) {
+  function frameFor(bars, width, options) {
+    const withVolume = options.volume !== false;
+    const bottomSpace = withVolume ? VOLUME_HEIGHT + VOLUME_GAP : 0;
     const plot = {
       left: PADDING.left,
       right: width - PADDING.right,
       top: PADDING.top,
-      bottom: HEIGHT - PADDING.bottom - VOLUME_HEIGHT - VOLUME_GAP
+      bottom: HEIGHT - PADDING.bottom - bottomSpace
     };
     let min = Infinity;
     let max = -Infinity;
@@ -91,68 +33,38 @@ const ChartCandle = (function () {
     })) || 1;
     return {
       plot: plot,
-      band: (plot.right - plot.left) / bars.length,
+      band: (plot.right - plot.left) / Math.max(1, bars.length),
       yPrice: ChartCore.linear([min - padding, max + padding],
                                [plot.bottom, plot.top]),
       min: min - padding,
       max: max + padding,
       count: bars.length,
+      withVolume: withVolume,
       yVolume: ChartCore.linear([0, maxVolume], [volumeBottom, volumeTop]),
       volumeBottom: volumeBottom,
       volumeTop: volumeTop
     };
   }
 
-  function draw(svg, container, bars, labels, overlays, width) {
-    const frame = frameFor(bars, width);
-    ChartAxes.priceGrid(svg, frame.plot, frame.yPrice, frame.min, frame.max);
-    ChartAxes.timeAxis(svg, bars, frame.plot, frame.band, labels.axisLabel);
-    const last = bars[bars.length - 1];
-    ChartAxes.lastPrice(svg, frame.plot, frame.yPrice, last.close,
-                        last.live ? LIVE : colourOf(last));
-    ChartSmc.drawZones(svg, frame, overlays);
-    ChartCore.text(svg, frame.plot.left, frame.volumeTop - 5, labels.volume,
-                   {anchor: "start", className: "chart-label dim"});
-    const bodyWidth = Math.max(1, Math.min(14, frame.band * 0.62));
-    bars.forEach(function (bar, index) {
-      const center = frame.plot.left + frame.band * (index + 0.5);
-      drawWick(svg, bar, center, frame.yPrice);
-      drawBody(svg, bar, center, bodyWidth, frame.yPrice);
-      drawVolume(svg, bar, center, bodyWidth, frame.yVolume,
-                 frame.volumeBottom);
-    });
-    ChartSmc.drawLevels(svg, frame, overlays);
-
-    const guide = ChartAxes.crosshair(svg, frame.plot);
-    const overlay = ChartCore.el("rect", {
-      x: frame.plot.left, y: frame.plot.top,
-      width: frame.plot.right - frame.plot.left,
-      height: frame.volumeBottom - frame.plot.top,
-      fill: "transparent", class: "chart-overlay"
-    });
-    svg.appendChild(overlay);
-    overlay.addEventListener("mousemove", function (event) {
-      const bounds = svg.getBoundingClientRect();
-      const scale = width / bounds.width;
-      const x = (event.clientX - bounds.left) * scale;
-      const y = (event.clientY - bounds.top) * scale;
-      const index = Math.min(bars.length - 1, Math.max(
-        0, Math.floor((x - frame.plot.left) / frame.band)));
-      const bar = bars[index];
-      const center = frame.plot.left + frame.band * (index + 0.5);
-      guide.move(center, Math.min(Math.max(y, frame.plot.top), frame.plot.bottom),
-                 ChartCore.fmtValue(bar.close));
-      ChartCore.showTooltip(container, tipContent(bar, labels),
-                            event.clientX - bounds.left,
-                            event.clientY - bounds.top);
-    });
-    overlay.addEventListener("mouseleave", function () {
-      guide.hide();
-      ChartCore.hideTooltip(container);
+  function scheduleDraw(container) {
+    if (container._chartFrame) {
+      return;
+    }
+    container._chartFrame = requestAnimationFrame(function () {
+      container._chartFrame = 0;
+      draw(container);
     });
   }
 
-  function render(container, bars, labels, overlays) {
+  function draw(container) {
+    const state = states.get(container);
+    if (!state) {
+      return;
+    }
+    const view = state.view;
+    const bars = state.bars;
+    const labels = state.labels;
+    const options = state.options;
     ChartCore.clear(container);
     const width = Math.max(300, container.clientWidth || 720);
     const svg = ChartCore.makeSvg(width, HEIGHT);
@@ -161,9 +73,93 @@ const ChartCandle = (function () {
       ChartCore.emptyNote(container, labels.empty);
       return;
     }
-    draw(svg, container, bars, labels, overlays, width);
+    const visible = bars.slice(view.from, view.to);
+    const frame = frameFor(visible, width, options);
+    ChartAxes.priceGrid(svg, frame.plot, frame.yPrice, frame.min, frame.max);
+    ChartAxes.timeAxis(svg, visible, frame.plot, frame.band, labels.axisLabel);
+    const last = bars[bars.length - 1];
+    if (options.lastPrice !== false) {
+      ChartAxes.lastPrice(svg, frame.plot, frame.yPrice, last.close,
+                          ChartSeries.liveColour(last));
+    }
+    if (options.ema20) {
+      ChartSeries.emaLine(svg,
+                          Indicators.emaSeries(bars, 20)
+                            .slice(view.from, view.to),
+                          frame, EMA_FAST);
+    }
+    if (options.ema50) {
+      ChartSeries.emaLine(svg,
+                          Indicators.emaSeries(bars, 50)
+                            .slice(view.from, view.to),
+                          frame, EMA_SLOW);
+    }
+    ChartSmc.drawZones(svg, frame, state.overlays);
+    if (frame.withVolume) {
+      ChartCore.text(svg, frame.plot.left, frame.volumeTop - 5, labels.volume,
+                     {anchor: "start", className: "chart-label dim"});
+    }
+    const bodyWidth = Math.max(1, Math.min(14, frame.band * 0.62));
+    visible.forEach(function (bar, index) {
+      const center = frame.plot.left + frame.band * (index + 0.5);
+      ChartSeries.wick(svg, bar, center, frame.yPrice);
+      ChartSeries.body(svg, bar, center, bodyWidth, frame.yPrice);
+      if (frame.withVolume) {
+        ChartSeries.volume(svg, bar, center, bodyWidth, frame.yVolume,
+                           frame.volumeBottom);
+      }
+    });
+    ChartSmc.drawLevels(svg, frame, state.overlays);
+    ChartGestures.attach(svg, container, {
+      frame: frame,
+      visible: visible,
+      width: width,
+      state: state,
+      labels: labels,
+      tipContent: ChartSeries.tip,
+      redraw: function () {
+        scheduleDraw(container);
+      }
+    });
   }
 
-  return {render: render};
-})();
+  function render(container, bars, labels, overlays, options) {
+    const previous = states.get(container);
+    let view = ChartView.create(bars.length);
+    if (previous && !ChartView.isFull(previous.view)) {
+      view = ChartView.withTotal(previous.view, bars.length);
+    }
+    states.set(container, {bars: bars, labels: labels, overlays: overlays,
+                           options: options || {}, view: view});
+    draw(container);
+  }
 
+  function zoomBy(container, factor) {
+    const state = states.get(container);
+    if (!state) {
+      return;
+    }
+    state.view = ChartView.zoom(state.view, factor, 0.5);
+    draw(container);
+  }
+
+  function reset(container) {
+    const state = states.get(container);
+    if (!state) {
+      return;
+    }
+    state.view = ChartView.create(state.bars.length);
+    draw(container);
+  }
+
+  return {
+    render: render,
+    zoomIn: function (container) {
+      zoomBy(container, 0.8);
+    },
+    zoomOut: function (container) {
+      zoomBy(container, 1.25);
+    },
+    reset: reset
+  };
+})();

@@ -36,9 +36,17 @@ const ChartControls = (function () {
     });
   }
 
+  function renderZoom(node, labels, handlers) {
+    node.innerHTML = "";
+    node.appendChild(chip("−", false, handlers.onZoomOut));
+    node.appendChild(chip("+", false, handlers.onZoomIn));
+    node.appendChild(chip(labels["price.zoom_reset"], false, handlers.onReset));
+  }
+
   function render(panel, state, labels, handlers) {
     renderIntervals(panel.intervalChips, state, handlers);
     renderRanges(panel.rangeChips, state, labels, handlers);
+    renderZoom(panel.zoomChips, labels, handlers);
   }
 
   return {render: render, INTERVALS: INTERVALS, RANGES: RANGES};

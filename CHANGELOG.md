@@ -37,6 +37,11 @@ version is tagged in git as `vX.Y.Z`.
 - A sharper price chart: right-hand price axis, five day ticks on the time axis,
   a dashed last-price line with a price tag, and a two-axis crosshair with a
   price tag next to the hover tooltip.
+- Chart interactions: drag to pan, wheel or pinch to zoom around the cursor,
+  `−`/`+`/`Reset` chips and a double click back to the full window, with the
+  viewport preserved across a live refresh.
+- An indicators panel under the chart: volume, last price, EMA 20, EMA 50 and
+  the four SMC groups, all toggled as chips and drawn over the candles.
 - Timeframe and range controls above the chart: `1m, 5m, 15m, 30m, 1h, 4h, 1D`
   crossed with `1D, 1W, 1M, 3M, 1Y, All`. The chart opens on `1D` and `All`, so
   every stored bar is visible, and `/api/series` now accepts `interval` and

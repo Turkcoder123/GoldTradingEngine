@@ -16,7 +16,14 @@ const DashboardLayout = (function () {
       priceSummary: document.getElementById("price-summary"),
       priceChart: document.getElementById("price-chart"),
       priceLive: document.getElementById("price-live"),
+      priceHint: document.getElementById("price-hint"),
       priceWindow: document.getElementById("price-window"),
+      zoomChips: document.getElementById("zoom-chips"),
+      indicators: {
+        title: document.getElementById("indicators-title"),
+        note: document.getElementById("indicators-note"),
+        chips: document.getElementById("indicator-chips")
+      },
       smc: {
         title: document.getElementById("smc-title"),
         note: document.getElementById("smc-note"),
@@ -59,6 +66,7 @@ const DashboardLayout = (function () {
     text("refresh", label("app.refresh"));
     text("overview-title", label("section.overview"));
     text("price-title", label("section.prices"));
+    text("price-hint", label("price.hint"));
     text("price-note", label("price.note"));
   }
 
